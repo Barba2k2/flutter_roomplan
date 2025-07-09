@@ -33,10 +33,9 @@ class RoomPlanController: NSObject, RoomCaptureSessionDelegate, FlutterStreamHan
   func startSession(result: @escaping FlutterResult) {
     self.flutterResult = result
     self.finalResults = nil
-    let captureSession = RoomCaptureSession()
+    
     roomCaptureView = RoomCaptureView(frame: .zero)
-    roomCaptureView?.captureSession = captureSession
-    captureSession.delegate = self
+    roomCaptureView?.captureSession.delegate = self
 
     let vc = UIViewController()
     vc.view = roomCaptureView
@@ -57,7 +56,7 @@ class RoomPlanController: NSObject, RoomCaptureSessionDelegate, FlutterStreamHan
 
     let configuration = RoomCaptureSession.Configuration()
 
-    captureSession.run(configuration: configuration)
+    roomCaptureView?.captureSession.run(configuration: configuration)
   }
 
   /// Called when the user taps the 'Done' button in the scanning UI.
