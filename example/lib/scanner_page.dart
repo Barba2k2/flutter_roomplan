@@ -1,10 +1,11 @@
+import 'package:example/results_page.dart';
 import 'package:flutter/material.dart';
 import 'package:roomplan_flutter/roomplan_flutter.dart';
 
 /// A page that demonstrates how to use the `RoomPlanScanner`.
 ///
-/// It provides a simple interface to start and stop a room scan,
-/// and displays the result of the scan.
+/// It provides a simple interface to start a room scan and
+/// navigates to the results page upon completion.
 class ScannerPage extends StatefulWidget {
   const ScannerPage({super.key});
 
@@ -15,9 +16,6 @@ class ScannerPage extends StatefulWidget {
 class _ScannerPageState extends State<ScannerPage> {
   late final RoomPlanScanner _roomPlanScanner;
 
-  /// The result of the last completed scan. '-' indicates no result yet.
-  String _scanResult = "-";
-
   /// Whether a scan is currently in progress.
   bool _isScanning = false;
 
@@ -25,6 +23,7 @@ class _ScannerPageState extends State<ScannerPage> {
   void initState() {
     super.initState();
     _roomPlanScanner = RoomPlanScanner();
+    _startScan();
   }
 
   @override
@@ -36,18 +35,26 @@ class _ScannerPageState extends State<ScannerPage> {
   /// Starts a new room scan session.
   ///
   /// Sets the state to `_isScanning = true` and waits for the user to
-  /// complete the scan. The result is then stored in `_scanResult`.
+  /// complete the scan. Then navigates to the results page.
   Future<void> _startScan() async {
     setState(() {
       _isScanning = true;
-      _scanResult = "-";
     });
+    // Starting the scan is a non-blocking call. The view is presented natively.
     await _roomPlanScanner.startScanning();
+    // `finishScanning` returns a `Future` that completes when the native view is dismissed.
     final result = await _roomPlanScanner.finishScanning();
     setState(() {
-      _scanResult = result?.toString() ?? "No result";
       _isScanning = false;
     });
+
+    if (result != null && mounted) {
+      await Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (context) => ResultsPage(scanResult: result),
+        ),
+      );
+    }
   }
 
   @override
@@ -56,25 +63,10 @@ class _ScannerPageState extends State<ScannerPage> {
       appBar: AppBar(
         title: const Text('RoomPlan Scan'),
       ),
-      body: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          if (_isScanning)
-            const Center(
-              child: CircularProgressIndicator(),
-            ),
-          Expanded(
-            child: SingleChildScrollView(
-              child: Text(_scanResult),
-            ),
-          )
-        ],
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _startScan,
-        tooltip: 'Start Scan',
-        child: const Icon(Icons.scanner),
+      body: Center(
+        child: _isScanning
+            ? const CircularProgressIndicator()
+            : const Text("Scan finished. Awaiting result..."),
       ),
     );
   }
