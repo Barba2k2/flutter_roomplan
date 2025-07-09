@@ -1,15 +1,10 @@
-import 'package:flutter/material.dart';
 import 'package:example/scanner_page.dart';
+import 'package:flutter/material.dart';
 
-/// Página inicial que navega diretamente para o RoomPlan
-class HomePage extends StatefulWidget {
+/// The home page of the example app.
+class HomePage extends StatelessWidget {
   const HomePage({super.key});
 
-  @override
-  State<HomePage> createState() => _HomePageState();
-}
-
-class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -29,14 +24,14 @@ class _HomePageState extends State<HomePage> {
               Text(
                 'RoomPlan Scanner',
                 style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: Colors.blue.shade700,
-                ),
+                      fontWeight: FontWeight.bold,
+                      color: Colors.blue.shade700,
+                    ),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 16),
               Text(
-                'Capture medições precisas do seu ambiente usando tecnologia ARKit',
+                'Capture precise measurements of your environment using ARKit technology. Press the button below to start scanning.',
                 style: TextStyle(
                   fontSize: 16,
                   color: Colors.grey.shade600,
@@ -46,16 +41,11 @@ class _HomePageState extends State<HomePage> {
               ),
               const SizedBox(height: 40),
               ElevatedButton.icon(
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const ScannerPage(),
-                    ),
-                  );
-                },
+                onPressed: () => Navigator.of(context).push(
+                  MaterialPageRoute(builder: (context) => const ScannerPage()),
+                ),
                 icon: const Icon(Icons.camera_alt_rounded),
-                label: const Text('Iniciar Scan'),
+                label: const Text('Start Scan'),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.blue.shade600,
                   foregroundColor: Colors.white,
@@ -86,7 +76,7 @@ class _HomePageState extends State<HomePage> {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'Requisitos',
+                      'Requirements',
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
                         color: Colors.blue.shade700,
@@ -95,9 +85,9 @@ class _HomePageState extends State<HomePage> {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      '• iOS 16.0 ou superior\n'
-                      '• Dispositivo compatível com ARKit\n'
-                      '• LiDAR recomendado para melhor precisão',
+                      '• iOS 16.0 or higher\n'
+                      '• ARKit compatible device\n'
+                      '• LiDAR recommended for best accuracy',
                       style: TextStyle(
                         color: Colors.blue.shade700,
                         fontSize: 13,
