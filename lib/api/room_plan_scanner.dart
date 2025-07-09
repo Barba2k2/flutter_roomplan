@@ -1,8 +1,7 @@
 import 'dart:async';
 
-import 'package:flutter/foundation.dart';
-import 'package:roomplan_flutter/roomplan_flutter.dart';
 import 'package:roomplan_flutter/src/mapper.dart';
+import 'package:roomplan_flutter/roomplan_flutter.dart';
 import 'package:roomplan_flutter/src/services/room_plan_channel.dart';
 
 /// The main class for interacting with the RoomPlan functionality.
@@ -11,40 +10,37 @@ import 'package:roomplan_flutter/src/services/room_plan_channel.dart';
 /// receiving real-time updates during a scan.
 class RoomPlanScanner {
   final RoomPlanChannel _channel;
+  StreamSubscription<dynamic>? _subscription;
 
   // Stream controllers
-  final _onScanResultController = StreamController<ScanResult>.broadcast();
+  final _streamController = StreamController<ScanResult>.broadcast();
 
   /// A stream that emits [ScanResult] in real-time. This includes room data,
   /// metadata, and confidence levels as the scan progresses.
-  Stream<ScanResult> get onScanResult => _onScanResultController.stream;
+  Stream<ScanResult> get onScanResult => _streamController.stream;
 
   /// Creates a new instance of the [RoomPlanScanner].
   RoomPlanScanner() : _channel = RoomPlanChannel() {
     _listenToUpdates();
   }
 
-  /// A constructor for testing purposes, allowing a mock channel to be injected.
-  @visibleForTesting
-  RoomPlanScanner.withChannel(this._channel) {
-    _listenToUpdates();
+  /// Closes the stream controller. It's important to call this when the scanner is no longer needed
+  /// to prevent memory leaks.
+  void dispose() {
+    _streamController.close();
+    _subscription?.cancel();
+    _channel.dispose();
   }
 
   void _listenToUpdates() {
-    _channel.scanUpdateStream.listen((event) {
-      final scanResult = parseScanResult(event['result']);
-      if (scanResult != null) {
-        _onScanResultController.add(scanResult);
+    _subscription = _channel.scanUpdateStream.listen((event) {
+      if (event is String) {
+        final scanResult = parseScanResult(event);
+        if (scanResult != null) {
+          _streamController.add(scanResult);
+        }
       }
     });
-  }
-
-  /// Disposes the scanner and closes all active streams.
-  /// It's important to call this method when the scanner is no longer needed
-  /// to prevent memory leaks.
-  void dispose() {
-    _onScanResultController.close();
-    _channel.dispose();
   }
 
   /// Checks if the current device supports RoomPlan.
@@ -55,36 +51,26 @@ class RoomPlanScanner {
 
   /// Starts a new room scanning session.
   ///
-  /// This method presents the native RoomPlan scanning interface to the user.
-  /// The returned [Future] completes when the scanning UI is fully presented.
+  /// This method presents a full-screen view for the user to scan their room.
+  /// You can listen to the [onScanResult] stream for real-time updates.
+  ///
+  /// The returned [Future] completes with the final [ScanResult] when the
+  /// user closes the scanning view (either by tapping 'Done' or 'Cancel').
+  /// A `null` value may be returned if the scan fails or is cancelled without
+  /// producing any data.
   ///
   /// Throws a [RoomPlanPermissionsException] if camera permissions are denied.
-  Future<void> startScanning() {
-    return _channel.startRoomCapture();
-  }
-
-  /// Finishes the current scanning session and returns the final results.
-  ///
-  /// This method should be called after the user completes the scan by tapping
-  /// the "Done" button in the native UI. The returned [Future] completes with a
-  /// [ScanResult] containing the full room data, metadata, and confidence levels.
-  ///
-  /// Returns `null` if the scan fails or is cancelled.
-  /// Throws a [ScanFailedException] if an error occurs during processing.
-  Future<ScanResult?> finishScanning() async {
-    final result = await _channel.scanResultStream.first;
-    if (result['error'] != null) {
-      final error = result['error'] as String;
-      if (error.toLowerCase().contains('cancel')) {
-        throw ScanCancelledException();
-      }
-      throw ScanFailedException(error);
+  Future<ScanResult?> startScanning() async {
+    final result = await _channel.startRoomCapture();
+    if (result is String) {
+      return parseScanResult(result);
     }
-    return parseScanResult(result['result']);
+    return null;
   }
 
-  /// Immediately stops the current scanning session without processing the data.
+  /// Programmatically stops the current room scanning session.
   ///
-  /// This is equivalent to the user tapping the "Cancel" button in the native UI.
+  /// When this method is called, the native scanning view is dismissed.
+  /// This will cause the [Future] returned by [startScanning] to complete.
   Future<void> stopScanning() => _channel.stopRoomCapture();
 }
