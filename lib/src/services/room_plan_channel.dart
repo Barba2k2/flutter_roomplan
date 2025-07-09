@@ -8,11 +8,12 @@ import 'package:roomplan_flutter/roomplan_flutter.dart';
 /// and receives callbacks from the native side.
 class RoomPlanChannel {
   final MethodChannel _channel;
+  final EventChannel _eventChannel;
 
   final StreamController<Map<String, dynamic>> _scanResultController =
       StreamController.broadcast();
 
-  final StreamController<Map<String, dynamic>> _scanUpdateController =
+  final StreamController<dynamic> _scanUpdateController =
       StreamController.broadcast();
 
   /// A stream for the final scan result, emitted when the user finishes.
@@ -20,36 +21,19 @@ class RoomPlanChannel {
       _scanResultController.stream;
 
   /// A stream for real-time updates during an active scan.
-  Stream<Map<String, dynamic>> get scanUpdateStream =>
-      _scanUpdateController.stream;
+  Stream<dynamic> get scanUpdateStream => _scanUpdateController.stream;
 
   /// Creates a [RoomPlanChannel].
   ///
   /// A custom [MethodChannel] can be provided for testing purposes.
-  RoomPlanChannel({MethodChannel? channel})
-      : _channel = channel ?? const MethodChannel('room_plan_channel') {
-    _channel.setMethodCallHandler(_handleMethod);
-  }
-
-  /// Handles incoming method calls from the native platform.
-  Future<void> _handleMethod(MethodCall call) async {
-    switch (call.method) {
-      case 'onScanResult':
-        if (call.arguments is Map) {
-          final result = Map<String, dynamic>.from(call.arguments);
-          _scanResultController.add(result);
-        }
-        break;
-      case 'onScanUpdate':
-        if (call.arguments is Map) {
-          final result = Map<String, dynamic>.from(call.arguments);
-          _scanUpdateController.add(result);
-        }
-        break;
-      default:
-        // Other methods are not expected from the native side.
-        break;
-    }
+  RoomPlanChannel({MethodChannel? channel, EventChannel? eventChannel})
+      : _channel =
+            channel ?? const MethodChannel('roomplan_flutter/method_channel'),
+        _eventChannel = eventChannel ??
+            const EventChannel('roomplan_flutter/event_channel') {
+    _eventChannel.receiveBroadcastStream().listen((event) {
+      _scanUpdateController.add(event);
+    });
   }
 
   /// Calls the native side to check if RoomPlan is supported on the device.
@@ -65,9 +49,9 @@ class RoomPlanChannel {
   }
 
   /// Calls the native side to start a room scanning session.
-  Future<void> startRoomCapture() async {
+  Future<dynamic> startRoomCapture() async {
     try {
-      await _channel.invokeMethod('startRoomCapture');
+      return await _channel.invokeMethod('startRoomCapture');
     } on PlatformException catch (e) {
       if (e.code == 'camera_permission_denied') {
         throw RoomPlanPermissionsException();
