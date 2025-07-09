@@ -40,20 +40,25 @@ class _ScannerPageState extends State<ScannerPage> {
     setState(() {
       _isScanning = true;
     });
-    // Starting the scan is a non-blocking call. The view is presented natively.
-    await _roomPlanScanner.startScanning();
-    // `finishScanning` returns a `Future` that completes when the native view is dismissed.
-    final result = await _roomPlanScanner.finishScanning();
+
+    // `startScanning` now returns a `Future` that completes with the final result
+    // when the native view is dismissed.
+    final result = await _roomPlanScanner.startScanning();
+
     setState(() {
       _isScanning = false;
     });
 
     if (result != null && mounted) {
-      await Navigator.of(context).push(
+      // Use pushReplacement to avoid building up a stack of pages.
+      await Navigator.of(context).pushReplacement(
         MaterialPageRoute(
           builder: (context) => ResultsPage(scanResult: result),
         ),
       );
+    } else if (mounted) {
+      // If the result is null (e.g., user cancelled), just go back to the previous page.
+      Navigator.of(context).pop();
     }
   }
 
@@ -65,7 +70,14 @@ class _ScannerPageState extends State<ScannerPage> {
       ),
       body: Center(
         child: _isScanning
-            ? const CircularProgressIndicator()
+            ? const Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  CircularProgressIndicator(),
+                  SizedBox(height: 16),
+                  Text("Scanning in progress..."),
+                ],
+              )
             : const Text("Scan finished. Awaiting result..."),
       ),
     );
