@@ -1,8 +1,8 @@
 name: roomplan_flutter
 description: A Flutter plugin to use Apple's RoomPlan API.
 version: 0.0.1
-homepage: https://github.com/barbadz/roomplan_flutter
-repository: https://github.com/barbadz/roomplan_flutter
+homepage: https://github.com/Barba2k2/flutter_roomplan
+repository: https://github.com/Barba2k2/flutter_roomplan
 
 environment:
   sdk: '>=3.0.0 <4.0.0'
