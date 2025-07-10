@@ -1,3 +1,12 @@
+## 0.0.4
+
+- **Feature**: Added support for detecting `openings`. The `RoomData` model now includes a list of `OpeningData`.
+- **Fix**: Implemented full data parsing for `WallData` and `OpeningData`, which now correctly deserialize `dimensions` and `confidence` from the native payload.
+- **Fix**: Resolved a critical threading issue in the native iOS code that caused crashes when sending updates to Flutter. Work is now correctly dispatched between background and main threads.
+- **Fix**: Corrected a native serialization error by implementing a custom `RoomPlanJSONConverter` to handle the `CapturedRoom` object, which is not directly `Encodable`.
+- **Chore(example)**: Refactored the example app's UI for better clarity and organization, separating views into individual widgets.
+- **Chore(example)**: Added visual feedback in the example app to show the `confidence` level of scanned items using colors.
+
 ## 0.0.3
 
 - **Docs**: Improved package description for better clarity on pub.dev.
