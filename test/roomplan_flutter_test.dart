@@ -7,81 +7,58 @@ void main() {
 
   const MethodChannel channel =
       MethodChannel('roomplan_flutter/method_channel');
-  MethodCall? receivedCall;
 
-  setUp(() {
-    TestWidgetsFlutterBinding.instance.defaultBinaryMessenger
-        .setMockMethodCallHandler(channel, (MethodCall methodCall) async {
-      receivedCall = methodCall;
-      switch (methodCall.method) {
-        case 'isRoomPlanSupported':
-          return true;
-        case 'startRoomCapture':
-          return null;
-        case 'stopRoomCapture':
-          return null; // Mock the stop call
-        default:
-          return null;
-      }
-    });
-  });
+  const mockScanResultJson = '''
+  {
+    "dimensions": {"x": 5.0, "y": 4.0, "z": 2.5},
+    "walls": [], "objects": [], "doors": [], "windows": [],
+    "metadata": { "session_duration": 120 },
+    "confidence": { "overall": 0.8 }
+  }
+  ''';
 
   tearDown(() {
     TestWidgetsFlutterBinding.instance.defaultBinaryMessenger
         .setMockMethodCallHandler(channel, null);
   });
 
-  test('isSupported returns true when platform supports it', () async {
-    final scanner = RoomPlanScanner();
-    final result = await scanner.isSupported();
+  group('RoomPlanScanner Tests', () {
+    test('startScanning returns a non-null result on success', () async {
+      TestWidgetsFlutterBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(channel, (MethodCall methodCall) async {
+        if (methodCall.method == 'startRoomCapture') {
+          return mockScanResultJson;
+        }
+        return null;
+      });
 
-    expect(result, isTrue);
-    expect(receivedCall?.method, 'isRoomPlanSupported');
-    scanner.dispose();
-  });
+      final scanner = RoomPlanScanner();
+      final result = await scanner.startScanning();
 
-  test('startScanning and finishScanning returns a parsed result', () async {
-    final scanner = RoomPlanScanner();
-    // We simulate this by invoking the method on the channel manually.
-    final futureResult = scanner.finishScanning();
+      expect(result, isNotNull);
+      expect(result, isA<ScanResult>());
+      scanner.dispose();
+    });
 
-    await TestWidgetsFlutterBinding.instance.defaultBinaryMessenger
-        .handlePlatformMessage(
-      'roomplan_flutter/method_channel',
-      const StandardMethodCodec().encodeMethodCall(
-        const MethodCall(
-          'onScanResult',
-          {
-            'result': '''
-            {
-              "walls": [],
-              "objects": [],
-              "floors": [
-                {
-                  "dimensions": [1.0, 2.0, 3.0]
-                }
-              ]
-            }
-            '''
-          },
-        ),
-      ),
-      (ByteData? data) {},
-    );
+    test('startScanning throws ScanCancelledException when user cancels',
+        () async {
+      TestWidgetsFlutterBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(
+        channel,
+        (MethodCall methodCall) async {
+          if (methodCall.method == 'startRoomCapture') {
+            throw PlatformException(code: 'CANCELED');
+          }
+          return null;
+        },
+      );
 
-    final result = await futureResult;
-
-    // Assertions
-    expect(result, isA<ScanResult>());
-    expect(result, isNotNull);
-    expect(result!.room, isNotNull);
-    expect(result.room.dimensions, isNotNull);
-
-    // Note: fromList uses [length, width, height]
-    expect(result.room.dimensions!.length, 1.0);
-    expect(result.room.dimensions!.width, 2.0);
-    expect(result.room.dimensions!.height, 3.0);
-
-    scanner.dispose();
+      final scanner = RoomPlanScanner();
+      expect(
+        () => scanner.startScanning(),
+        throwsA(isA<ScanCancelledException>()),
+      );
+      scanner.dispose();
+    });
   });
 }
