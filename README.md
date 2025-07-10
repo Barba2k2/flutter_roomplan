@@ -27,50 +27,102 @@ Finally, run `flutter pub get`.
 
 ## Usage
 
-Here's a basic example of how to use the `RoomPlanScanner`.
+Here's a basic example of how to use the `RoomPlanScanner` in a Flutter widget.
 
 ```dart
+import 'dart:async';
+import 'package:flutter/material.dart';
 import 'package:roomplan_flutter/roomplan_flutter.dart';
 
-// 1. Create a scanner instance
-final _roomScanner = RoomPlanScanner();
+class ScannerWidget extends StatefulWidget {
+  const ScannerWidget({super.key});
 
-// 2. (Optional) Listen to real-time updates
-_roomScanner.onScanResult.listen((result) {
-  print('Room updated! Walls: ${result.room.walls.length}, Objects: ${result.room.objects.length}');
-});
-
-// 3. Start the scan and await the final result
-try {
-  final result = await _roomScanner.startScanning();
-  print('Scan complete! Room has ${result?.room.walls.length} walls.');
-} on ScanCancelledException {
-  print('Scan was cancelled by the user.');
-} catch (e) {
-  print('Error finishing scan: $e');
+  @override
+  State<ScannerWidget> createState() => _ScannerWidgetState();
 }
 
-// 4. Don't forget to dispose the scanner
-_roomScanner.dispose();
+class _ScannerWidgetState extends State<ScannerWidget> {
+  late final RoomPlanScanner _roomScanner;
+  StreamSubscription<ScanResult>? _scanSubscription;
+
+  @override
+  void initState() {
+    super.initState();
+    _roomScanner = RoomPlanScanner();
+
+    // Listen to real-time updates
+    _scanSubscription = _roomScanner.onScanResult.listen((result) {
+      print('Room updated! Walls: ${result.room.walls.length}');
+    });
+  }
+
+  @override
+  void dispose() {
+    // It's important to cancel the subscription and dispose the scanner
+    _scanSubscription?.cancel();
+    _roomScanner.dispose();
+    super.dispose();
+  }
+
+  Future<void> _startScan() async {
+    try {
+      final result = await _roomScanner.startScanning();
+      // Use the final result
+      print('Scan complete! Room has ${result?.room.walls.length} walls.');
+    } on ScanCancelledException {
+      print('Scan was cancelled by the user.');
+    } catch (e) {
+      print('Error finishing scan: $e');
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ElevatedButton(
+      onPressed: _startScan,
+      child: const Text('Start Scan'),
+    );
+  }
+}
 ```
 
 See the `example` app for a more detailed implementation.
 
 ## Data Models
 
-The plugin returns a `ScanResult` object which contains the following structured data:
+The plugin returns a `ScanResult` object, which contains a tree of structured data.
 
-- `ScanResult`:
-  - `room`: A `RoomData` object.
-  - `metadata`: A `ScanMetadata` object.
-  - `confidence`: A `ScanConfidence` object.
-- `RoomData`:
-  - `dimensions`: Overall room dimensions (`length`, `width`, `height`).
+- `ScanResult`: The root object containing the full scan details.
+
+  - `room`: A `RoomData` object with information about the scanned room.
+  - `metadata`: A `ScanMetadata` object with details about the session.
+  - `confidence`: A `ScanConfidence` object indicating the scan's quality.
+
+- `RoomData`: Contains the physical properties of the room.
+
+  - `dimensions`: A `RoomDimensions` object (`length`, `width`, `height`).
   - `walls`: A list of `WallData` objects.
-  - `objects`: A list of `ObjectData` objects.
-  - `doors`: A list of `OpeningData` objects.
-  - `windows`: A list of `OpeningData` objects.
-- `WallData`/`OpeningData`:
-  - `uuid`, `dimensions`, `confidence`, etc.
+  - `objects`: A list of `ObjectData` objects (e.g., table, chair).
+  - `doors`: A list of `OpeningData` for doors.
+  - `windows`: A list of `OpeningData` for windows.
 
-Refer to the source code for detailed information on each model.
+- `WallData`, `ObjectData`, `OpeningData`: These models describe a physical entity and share common fields:
+
+  - `uuid`: A unique identifier for the entity.
+  - `position`: A `Position` object (`Vector3`) representing the center point.
+  - `dimensions` / `width`, `height`, `length`: The size of the entity.
+  - `confidence`: An enum (`Confidence.low`, `medium`, `high`) for the detected entity.
+
+- `ScanMetadata`: Contains metadata about the scanning session.
+
+  - `scanDuration`: A `Duration` object.
+  - `scanDate`: The `DateTime` when the scan started.
+  - `deviceModel`: The model of the device (e.g., "iPhone14,3").
+  - `hasLidar`: A boolean indicating if the device has a LiDAR sensor.
+
+- `ScanConfidence`: Contains confidence values for different aspects of the scan.
+  - `overall`: A `double` from 0.0 to 1.0.
+  - `wallAccuracy`: A `double` for the accuracy of wall detection.
+  - `dimensionAccuracy`: A `double` for the accuracy of measurements.
+
+Refer to the source code for detailed information on all fields.
