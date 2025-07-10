@@ -33,7 +33,7 @@ class RoomPlanController: NSObject, RoomCaptureSessionDelegate, FlutterStreamHan
   func startSession(result: @escaping FlutterResult) {
     self.flutterResult = result
     self.finalResults = nil
-    
+
     roomCaptureView = RoomCaptureView(frame: .zero)
     roomCaptureView?.captureSession.delegate = self
 
@@ -89,15 +89,17 @@ class RoomPlanController: NSObject, RoomCaptureSessionDelegate, FlutterStreamHan
   public func captureSession(_ session: RoomCaptureSession, didUpdate room: CapturedRoom) {
     finalResults = room
     if let eventSink = eventSink {
-      do {
-        let encodedData = try JSONEncoder().encode(room)
-        let json = String(data: encodedData, encoding: .utf8)
-        eventSink(json)
-      } catch {
-        eventSink(
-          FlutterError(
-            code: "serialization_error", message: "Failed to serialize room data",
-            details: error.localizedDescription))
+      DispatchQueue.main.async {
+        do {
+          let encodedData = try JSONEncoder().encode(room)
+          let json = String(data: encodedData, encoding: .utf8)
+          eventSink(json)
+        } catch {
+          eventSink(
+            FlutterError(
+              code: "serialization_error", message: "Failed to serialize room data",
+              details: error.localizedDescription))
+        }
       }
     }
   }
