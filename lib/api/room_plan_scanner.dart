@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:developer';
 
 import 'package:roomplan_flutter/src/mapper.dart';
 import 'package:roomplan_flutter/roomplan_flutter.dart';
@@ -33,14 +34,21 @@ class RoomPlanScanner {
   }
 
   void _listenToUpdates() {
-    _subscription = _channel.scanUpdateStream.listen((event) {
-      if (event is String) {
-        final scanResult = parseScanResult(event);
-        if (scanResult != null) {
-          _streamController.add(scanResult);
+    _subscription = _channel.scanUpdateStream.listen(
+      (event) {
+        if (event is String) {
+          try {
+            final scanResult = parseScanResult(event);
+            if (scanResult != null) {
+              _streamController.add(scanResult);
+            }
+          } catch (e, s) {
+            log('[RoomPlanScanner] Error parsing scan result: $e',
+                stackTrace: s);
+          }
         }
-      }
-    });
+      },
+    );
   }
 
   /// Starts a new room scanning session.
@@ -57,7 +65,13 @@ class RoomPlanScanner {
   Future<ScanResult?> startScanning() async {
     final result = await _channel.startRoomCapture();
     if (result is String) {
-      return parseScanResult(result);
+      try {
+        final parsedResult = parseScanResult(result);
+        return parsedResult;
+      } catch (e, s) {
+        log('[RoomPlanScanner] Error parsing final result: $e', stackTrace: s);
+        return null;
+      }
     }
     return null;
   }
@@ -66,5 +80,7 @@ class RoomPlanScanner {
   ///
   /// When this method is called, the native scanning view is dismissed.
   /// This will cause the [Future] returned by [startScanning] to complete.
-  Future<void> stopScanning() => _channel.stopRoomCapture();
+  Future<void> stopScanning() {
+    return _channel.stopRoomCapture();
+  }
 }
