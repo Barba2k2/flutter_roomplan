@@ -2,6 +2,7 @@ import ARKit
 import AVFoundation
 import Flutter
 import Foundation
+import os
 import RoomPlan
 
 /// A singleton class that manages the RoomPlan session and communication with Flutter.
@@ -14,6 +15,7 @@ import RoomPlan
 class RoomPlanController: NSObject, RoomCaptureSessionDelegate, FlutterStreamHandler {
   /// The shared singleton instance.
   static let shared = RoomPlanController()
+  private let logger = Logger(subsystem: "com.apple.RoomPlan", category: "RoomPlanController")
 
   /// The method channel used to communicate with Flutter.
   var channel: FlutterMethodChannel?
@@ -99,6 +101,7 @@ class RoomPlanController: NSObject, RoomCaptureSessionDelegate, FlutterStreamHan
             eventSink(json)
           }
         } catch {
+          self.logger.error("Error encoding realtime room: \(error.localizedDescription)")
           // Go back to the main thread to send the error to Flutter
           DispatchQueue.main.async {
             eventSink(
@@ -115,9 +118,10 @@ class RoomPlanController: NSObject, RoomCaptureSessionDelegate, FlutterStreamHan
   public func captureSession(
     _ session: RoomCaptureSession, didEndWith data: CapturedRoomData, error: Error?
   ) {
-    if error != nil {
+    if let error = error {
+      logger.error("RoomPlan session ended with error: \(error.localizedDescription)")
       flutterResult?(
-        FlutterError(code: "native_error", message: error!.localizedDescription, details: nil))
+        FlutterError(code: "native_error", message: error.localizedDescription, details: nil))
       return
     }
 
@@ -125,6 +129,7 @@ class RoomPlanController: NSObject, RoomCaptureSessionDelegate, FlutterStreamHan
       let json = try RoomPlanJSONConverter.convertToJSON(capturedRoom: finalResults!)
       flutterResult?(json)
     } catch {
+      logger.error("Error encoding final room: \(error.localizedDescription)")
       flutterResult?(
         FlutterError(
           code: "serialization_error", message: "Failed to serialize final room data",
