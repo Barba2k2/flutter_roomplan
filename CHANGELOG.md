@@ -1,3 +1,11 @@
+## 0.0.3
+
+- **Docs**: Improved package description for better clarity on pub.dev.
+- **Fix**: Corrected exception handling for scan cancellation.
+- **Refactor**: Simplified the internal JSON mapper for robustness.
+- **Chore(example)**: Updated the example application and its dependencies.
+- **Test**: Overhauled the test suite, adding isolated tests for the mapper and simplifying plugin-level tests.
+
 ## 0.0.2
 
 - **BREAKING**: Refactored `RoomPlanScanner` API for clarity and correctness.
