@@ -100,8 +100,6 @@ class RoomPlanController: NSObject, RoomCaptureSessionDelegate, FlutterStreamHan
             eventSink(json)
           }
         } catch {
-          self.logger.error(
-            "[RoomPlanController] Error during JSON conversion: \(error.localizedDescription)")
           // Go back to the main thread to send the error to Flutter
           DispatchQueue.main.async {
             eventSink(
@@ -119,14 +117,12 @@ class RoomPlanController: NSObject, RoomCaptureSessionDelegate, FlutterStreamHan
     _ session: RoomCaptureSession, didEndWith data: CapturedRoomData, error: Error?
   ) {
     if let error = error {
-      logger.error("RoomPlan session ended with error: \(error.localizedDescription)")
       flutterResult?(
         FlutterError(code: "native_error", message: error.localizedDescription, details: nil))
       return
     }
 
     guard let finalResults = finalResults else {
-      logger.error("[RoomPlanController] Final results are nil, cannot process.")
       flutterResult?(
         FlutterError(code: "data_not_found", message: "Final scan data is missing.", details: nil)
       )
@@ -137,7 +133,6 @@ class RoomPlanController: NSObject, RoomCaptureSessionDelegate, FlutterStreamHan
       let json = try RoomPlanJSONConverter.convertToJSON(capturedRoom: finalResults)
       flutterResult?(json)
     } catch {
-      logger.error("Error encoding final room: \(error.localizedDescription)")
       flutterResult?(
         FlutterError(
           code: "serialization_error", message: "Failed to serialize final room data",

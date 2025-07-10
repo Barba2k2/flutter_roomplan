@@ -43,8 +43,10 @@ class RoomPlanScanner {
               _streamController.add(scanResult);
             }
           } catch (e, s) {
-            log('[RoomPlanScanner] Error parsing scan result: $e',
-                stackTrace: s);
+            log(
+              '[RoomPlanScanner] Error parsing scan result: $e',
+              stackTrace: s,
+            );
           }
         }
       },
