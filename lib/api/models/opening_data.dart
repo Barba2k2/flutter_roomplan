@@ -7,6 +7,9 @@ enum OpeningType {
 
   /// A window opening.
   window,
+
+  /// A generic opening.
+  opening,
 }
 
 /// Represents a detected opening in a wall, which can be a door or a window.

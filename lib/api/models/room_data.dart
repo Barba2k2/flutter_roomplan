@@ -18,6 +18,9 @@ class RoomData {
   /// A list of all detected windows in the room.
   final List<OpeningData> windows;
 
+  /// A list of all detected openings in the room.
+  final List<OpeningData> openings;
+
   /// Creates a [RoomData].
   const RoomData({
     this.dimensions,
@@ -25,5 +28,6 @@ class RoomData {
     required this.objects,
     required this.doors,
     required this.windows,
+    required this.openings,
   });
 }
