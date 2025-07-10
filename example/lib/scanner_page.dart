@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:developer';
 
 import 'package:example/results_page.dart';
 import 'package:flutter/material.dart';
@@ -18,24 +17,17 @@ class ScannerPage extends StatefulWidget {
 
 class _ScannerPageState extends State<ScannerPage> {
   late final RoomPlanScanner _roomPlanScanner;
-  StreamSubscription? _scanSubscription;
   bool _isScanning = false;
 
   @override
   void initState() {
     super.initState();
     _roomPlanScanner = RoomPlanScanner();
-    _scanSubscription = _roomPlanScanner.onScanResult.listen((result) {
-      // The stream provides real-time updates on the scan.
-      // For this example, we don't do anything with them, but you could
-      // use them to build a real-time visualization.
-    });
     _startScan();
   }
 
   @override
   void dispose() {
-    _scanSubscription?.cancel();
     _roomPlanScanner.dispose();
     super.dispose();
   }
