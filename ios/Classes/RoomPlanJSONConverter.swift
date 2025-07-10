@@ -35,12 +35,12 @@ struct SerializableRoom: Encodable {
 /// A serializable representation of a `CapturedRoom.Surface`.
 struct SerializableSurface: Encodable {
   let uuid: UUID
-  let dimensions: simd_float3
+  let dimensions: SerializableVector
   let confidence: String
 
   init(from surface: CapturedRoom.Surface) {
     self.uuid = surface.identifier
-    self.dimensions = surface.dimensions
+    self.dimensions = SerializableVector(from: surface.dimensions)
     self.confidence = surface.confidence.description
   }
 }
@@ -49,14 +49,27 @@ struct SerializableSurface: Encodable {
 struct SerializableObject: Encodable {
   let uuid: UUID
   let category: String
-  let dimensions: simd_float3
+  let dimensions: SerializableVector
   let confidence: String
 
   init(from object: CapturedRoom.Object) {
     self.uuid = object.identifier
     self.category = object.category.description
-    self.dimensions = object.dimensions
+    self.dimensions = SerializableVector(from: object.dimensions)
     self.confidence = object.confidence.description
+  }
+}
+
+/// A serializable representation of a `simd_float3` vector.
+struct SerializableVector: Encodable {
+  let x: Float
+  let y: Float
+  let z: Float
+
+  init(from vector: simd_float3) {
+    self.x = vector.x
+    self.y = vector.y
+    self.z = vector.z
   }
 }
 
