@@ -89,16 +89,23 @@ class RoomPlanController: NSObject, RoomCaptureSessionDelegate, FlutterStreamHan
   public func captureSession(_ session: RoomCaptureSession, didUpdate room: CapturedRoom) {
     finalResults = room
     if let eventSink = eventSink {
-      DispatchQueue.main.async {
+      // Go to a background thread to do the heavy encoding work
+      DispatchQueue.global(qos: .userInitiated).async {
         do {
           let encodedData = try JSONEncoder().encode(room)
           let json = String(data: encodedData, encoding: .utf8)
-          eventSink(json)
+          // Go back to the main thread to send the result to Flutter
+          DispatchQueue.main.async {
+            eventSink(json)
+          }
         } catch {
-          eventSink(
-            FlutterError(
-              code: "serialization_error", message: "Failed to serialize room data",
-              details: error.localizedDescription))
+          // Go back to the main thread to send the error to Flutter
+          DispatchQueue.main.async {
+            eventSink(
+              FlutterError(
+                code: "serialization_error", message: "Failed to serialize room data",
+                details: error.localizedDescription))
+          }
         }
       }
     }
