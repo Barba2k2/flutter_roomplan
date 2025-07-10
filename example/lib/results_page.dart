@@ -86,7 +86,7 @@ class ResultsPage extends StatelessWidget {
       itemBuilder: (context, index) {
         final object = objects[index];
         return _buildMeasurementCard(
-          object.category.name,
+          _capitalize(object.category.name),
           {
             'Length': '${object.length.toStringAsFixed(2)} m',
             'Width': '${object.width.toStringAsFixed(2)} m',
@@ -128,6 +128,11 @@ class ResultsPage extends StatelessWidget {
         ),
       ],
     );
+  }
+
+  String _capitalize(String s) {
+    if (s.isEmpty) return '';
+    return s[0].toUpperCase() + s.substring(1);
   }
 
   Widget _buildMeasurementCard(String title, Map<String, String> details) {
