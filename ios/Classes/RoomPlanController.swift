@@ -2,8 +2,8 @@ import ARKit
 import AVFoundation
 import Flutter
 import Foundation
-import os
 import RoomPlan
+import os
 
 /// A singleton class that manages the RoomPlan session and communication with Flutter.
 ///
@@ -125,8 +125,15 @@ class RoomPlanController: NSObject, RoomCaptureSessionDelegate, FlutterStreamHan
       return
     }
 
+    guard let finalResults = finalResults else {
+      flutterResult?(
+        FlutterError(code: "data_not_found", message: "Final scan data is missing.", details: nil)
+      )
+      return
+    }
+
     do {
-      let json = try RoomPlanJSONConverter.convertToJSON(capturedRoom: finalResults!)
+      let json = try RoomPlanJSONConverter.convertToJSON(capturedRoom: finalResults)
       flutterResult?(json)
     } catch {
       logger.error("Error encoding final room: \(error.localizedDescription)")
