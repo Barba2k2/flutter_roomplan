@@ -36,18 +36,6 @@ class RoomPlanChannel {
     });
   }
 
-  /// Calls the native side to check if RoomPlan is supported on the device.
-  Future<bool> isRoomPlanSupported() async {
-    try {
-      final bool isSupported = await _channel.invokeMethod(
-        'isRoomPlanSupported',
-      );
-      return isSupported;
-    } on PlatformException {
-      return false;
-    }
-  }
-
   /// Calls the native side to start a room scanning session.
   Future<dynamic> startRoomCapture() async {
     try {
@@ -55,6 +43,9 @@ class RoomPlanChannel {
     } on PlatformException catch (e) {
       if (e.code == 'camera_permission_denied') {
         throw RoomPlanPermissionsException();
+      }
+      if (e.code == 'CANCELED') {
+        throw ScanCancelledException();
       }
       rethrow;
     }
