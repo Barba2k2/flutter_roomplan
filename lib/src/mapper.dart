@@ -35,6 +35,9 @@ RoomData _toRoomData(Map<String, dynamic> data) {
     windows: (data['windows'] as List? ?? [])
         .map((w) => _toOpeningData(w, OpeningType.window))
         .toList(),
+    openings: (data['openings'] as List? ?? [])
+        .map((o) => _toOpeningData(o, OpeningType.opening))
+        .toList(),
   );
 }
 
@@ -48,13 +51,14 @@ RoomDimensions? _toRoomDimensions(Map<String, dynamic>? data) {
 }
 
 WallData _toWallData(Map<String, dynamic> data) {
+  final dimensions = _toRoomDimensions(data['dimensions']);
   return WallData(
     uuid: data['uuid'] ?? '',
-    width: 0,
-    height: 0,
+    width: dimensions?.width ?? 0,
+    height: dimensions?.length ?? 0,
     position: Position(Vector3.zero()),
     points: const [],
-    confidence: Confidence.low,
+    confidence: _toConfidence(data['confidence']),
     openings: const [],
   );
 }
@@ -72,13 +76,14 @@ ObjectData _toObjectData(Map<String, dynamic> data) {
 }
 
 OpeningData _toOpeningData(Map<String, dynamic> data, OpeningType type) {
+  final dimensions = _toRoomDimensions(data['dimensions']);
   return OpeningData(
     uuid: data['uuid'] ?? '',
     type: type,
-    width: 0,
-    height: 0,
+    width: dimensions?.width ?? 0,
+    height: dimensions?.length ?? 0,
     position: Position(Vector3.zero()),
-    confidence: Confidence.low,
+    confidence: _toConfidence(data['confidence']),
   );
 }
 
@@ -114,4 +119,17 @@ ScanConfidence _toScanConfidence(Map<String, dynamic>? data) {
     wallAccuracy: 0, // Placeholder
     dimensionAccuracy: 0, // Placeholder
   );
+}
+
+Confidence _toConfidence(String? confidence) {
+  switch (confidence) {
+    case 'low':
+      return Confidence.low;
+    case 'medium':
+      return Confidence.medium;
+    case 'high':
+      return Confidence.high;
+    default:
+      return Confidence.low;
+  }
 }
