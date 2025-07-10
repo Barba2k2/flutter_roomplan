@@ -100,7 +100,8 @@ class RoomPlanController: NSObject, RoomCaptureSessionDelegate, FlutterStreamHan
             eventSink(json)
           }
         } catch {
-          self.logger.error("Error encoding realtime room: \(error.localizedDescription)")
+          self.logger.error(
+            "[RoomPlanController] Error during JSON conversion: \(error.localizedDescription)")
           // Go back to the main thread to send the error to Flutter
           DispatchQueue.main.async {
             eventSink(
@@ -125,6 +126,7 @@ class RoomPlanController: NSObject, RoomCaptureSessionDelegate, FlutterStreamHan
     }
 
     guard let finalResults = finalResults else {
+      logger.error("[RoomPlanController] Final results are nil, cannot process.")
       flutterResult?(
         FlutterError(code: "data_not_found", message: "Final scan data is missing.", details: nil)
       )
