@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:roomplan_flutter/roomplan_flutter.dart';
 import 'package:vector_math/vector_math_64.dart';
 
@@ -7,7 +8,9 @@ ScanResult? parseScanResult(String? jsonResult) {
   try {
     final Map<String, dynamic> data = json.decode(jsonResult);
     return _toScanResult(data);
-  } catch (e) {
+  } catch (e, stacktrace) {
+    debugPrint('Error parsing scan result: $e');
+    debugPrint(stacktrace.toString());
     return null;
   }
 }
