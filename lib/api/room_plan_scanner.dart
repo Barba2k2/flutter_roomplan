@@ -43,12 +43,6 @@ class RoomPlanScanner {
     });
   }
 
-  /// Checks if the current device supports RoomPlan.
-  ///
-  /// RoomPlan requires a device with a LiDAR sensor running iOS 16 or newer.
-  /// Returns `true` if supported, `false` otherwise.
-  Future<bool> isSupported() => _channel.isRoomPlanSupported();
-
   /// Starts a new room scanning session.
   ///
   /// This method presents a full-screen view for the user to scan their room.
