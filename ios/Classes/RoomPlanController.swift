@@ -94,8 +94,7 @@ class RoomPlanController: NSObject, RoomCaptureSessionDelegate, FlutterStreamHan
       // Go to a background thread to do the heavy encoding work
       DispatchQueue.global(qos: .userInitiated).async {
         do {
-          let encodedData = try JSONEncoder().encode(room)
-          let json = String(data: encodedData, encoding: .utf8)
+          let json = try RoomPlanJSONConverter.convertToJSON(capturedRoom: room)
           // Go back to the main thread to send the result to Flutter
           DispatchQueue.main.async {
             eventSink(json)
