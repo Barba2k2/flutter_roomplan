@@ -15,8 +15,6 @@ class ScannerPage extends StatefulWidget {
 
 class _ScannerPageState extends State<ScannerPage> {
   late final RoomPlanScanner _roomPlanScanner;
-
-  /// Whether a scan is currently in progress.
   bool _isScanning = false;
 
   @override
@@ -37,28 +35,33 @@ class _ScannerPageState extends State<ScannerPage> {
   /// Sets the state to `_isScanning = true` and waits for the user to
   /// complete the scan. Then navigates to the results page.
   Future<void> _startScan() async {
-    setState(() {
-      _isScanning = true;
-    });
-
-    // `startScanning` now returns a `Future` that completes with the final result
-    // when the native view is dismissed.
-    final result = await _roomPlanScanner.startScanning();
-
-    setState(() {
-      _isScanning = false;
-    });
-
-    if (result != null && mounted) {
-      // Use pushReplacement to avoid building up a stack of pages.
-      await Navigator.of(context).pushReplacement(
-        MaterialPageRoute(
-          builder: (context) => ResultsPage(scanResult: result),
-        ),
-      );
-    } else if (mounted) {
-      // If the result is null (e.g., user cancelled), just go back to the previous page.
-      Navigator.of(context).pop();
+    setState(() => _isScanning = true);
+    try {
+      final result = await _roomPlanScanner.startScanning();
+      if (result == null) {
+        if (mounted) Navigator.of(context).pop();
+        return;
+      }
+      if (mounted) {
+        await Navigator.of(context).pushReplacement(
+          MaterialPageRoute(
+            builder: (context) => ResultsPage(scanResult: result),
+          ),
+        );
+      }
+    } on ScanCancelledException {
+      if (mounted) Navigator.of(context).pop();
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error starting scan: $e')),
+        );
+        Navigator.of(context).pop();
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isScanning = false);
+      }
     }
   }
 
@@ -75,10 +78,10 @@ class _ScannerPageState extends State<ScannerPage> {
                 children: [
                   CircularProgressIndicator(),
                   SizedBox(height: 16),
-                  Text("Scanning in progress..."),
+                  Text("Initializing scanner..."),
                 ],
               )
-            : const Text("Scan finished. Awaiting result..."),
+            : const SizedBox.shrink(),
       ),
     );
   }
