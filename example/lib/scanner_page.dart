@@ -1,5 +1,6 @@
 import 'package:example/results_page.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:roomplan_flutter/roomplan_flutter.dart';
 
 /// A page that demonstrates how to use the `RoomPlanScanner`.
@@ -51,7 +52,9 @@ class _ScannerPageState extends State<ScannerPage> {
       }
     } on ScanCancelledException {
       if (mounted) Navigator.of(context).pop();
-    } catch (e) {
+    } catch (e, stacktrace) {
+      debugPrint('Error starting scan: $e');
+      debugPrint(stacktrace.toString());
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Error starting scan: $e')),
