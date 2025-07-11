@@ -1,3 +1,9 @@
+## 0.0.5
+
+- **Feature**: Added `floor` and `ceiling` properties to `RoomData` to provide direct access to these surfaces when available.
+- **Feature**: Added `transform` (Matrix4) and `dimensions` (RoomDimensions) properties to `WallData`, `ObjectData`, and `OpeningData`. This provides more precise positioning and sizing data aligned with the latest native APIs.
+- **Fix**: The example app now includes a `PaintAreaDetailsView` to demonstrate calculating the paintable area of walls, subtracting openings.
+
 ## 0.0.4
 
 - **Feature**: Added support for detecting `openings`. The `RoomData` model now includes a list of `OpeningData`.
