@@ -13,7 +13,7 @@ First, add `roomplan_flutter` to your `pubspec.yaml` dependencies:
 
 ```yaml
 dependencies:
-  roomplan_flutter: ^0.0.7 # Replace with the latest version
+  roomplan_flutter: ^0.0.8 # Replace with the latest version
 ```
 
 Then, add the required `NSCameraUsageDescription` to your `ios/Runner/Info.plist` file to explain why your app needs camera access:

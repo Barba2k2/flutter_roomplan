@@ -1,3 +1,9 @@
+## 0.0.8
+
+- **Refactor(example)**: Reorganized example code structure for better pub.dev display and maintainability.
+- **Improvement(example)**: Simplified main.dart and moved comprehensive example to scanner_page.dart with detailed documentation.
+- **Enhancement(example)**: Added better UI organization, extensive code comments, and improved user experience with real-time scan data display.
+
 ## 0.0.7
 
 - **Feature(example)**: Enhanced main.dart with comprehensive RoomPlanScanner example demonstrating proper initialization, real-time updates, and result handling.
