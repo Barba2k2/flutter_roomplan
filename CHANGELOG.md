@@ -1,3 +1,12 @@
+## 0.0.6
+
+- **Feature**: Enhanced LiDAR detection with multi-method approach for better accuracy across different iOS devices and development environments.
+- **Feature**: Added support for iPhone 16 Pro and Pro Max models in LiDAR device detection.
+- **Fix**: Added missing `CapturedRoom.Surface.Category` extension mapping for proper surface categorization (doors, windows, openings, walls).
+- **Fix**: Corrected height mapping for doors and windows - now uses the correct Y component instead of Z component for opening height calculations.
+- **Fix**: Resolved Swift compilation errors related to device identifier parsing using proper `String(cString:)` method.
+- **Chore**: Removed debug logging from both native iOS and Flutter code for cleaner production builds.
+
 ## 0.0.5
 
 - **Feature**: Added `floor` and `ceiling` properties to `RoomData` to provide direct access to these surfaces when available.
