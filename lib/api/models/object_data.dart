@@ -1,4 +1,7 @@
 import 'package:roomplan_flutter/roomplan_flutter.dart';
+import 'package:vector_math/vector_math_64.dart';
+
+import 'position.dart';
 
 /// Pre-defined categories for scanned objects.
 enum ObjectCategory {
@@ -39,6 +42,12 @@ class ObjectData {
   /// The confidence level of the detected object.
   final Confidence confidence;
 
+  /// The detailed dimensions (width, height, depth) from the new API.
+  final RoomDimensions? dimensions;
+
+  /// The 3D transformation matrix (position, rotation) from the new API.
+  final Matrix4? transform;
+
   /// Creates an [ObjectData].
   const ObjectData({
     required this.uuid,
@@ -48,5 +57,7 @@ class ObjectData {
     required this.height,
     required this.length,
     required this.confidence,
+    this.dimensions,
+    this.transform,
   });
 }
