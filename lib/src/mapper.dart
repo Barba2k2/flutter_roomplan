@@ -135,7 +135,7 @@ OpeningData _toOpeningData(Map<String, dynamic> data, OpeningType type) {
     uuid: data['uuid'] as String? ?? '',
     type: type,
     width: dimensions?.width ?? 0,
-    height: dimensions?.length ?? 0,
+    height: dimensions?.height ?? 0,
     position: position,
     confidence: _toConfidence(data['confidence'] as String?),
     dimensions: dimensions,
