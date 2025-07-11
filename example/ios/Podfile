@@ -1,7 +1,7 @@
 # Uncomment this line to define a global platform for your project
 platform :ios, '16.0'
 
-# CocoaPods analytics sends network stats synchronously affecting flutter build latency.
+# CocoaPods analytics sends network requests to Segment, Inc. to collect statistical data.
 ENV['COCOAPODS_DISABLE_STATS'] = 'true'
 
 project 'Runner', {
