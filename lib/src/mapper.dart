@@ -66,7 +66,10 @@ RoomDimensions? _toRoomDimensions(Map<String, dynamic>? data) {
 
 Matrix4? _toMatrix(List<dynamic>? data) {
   if (data == null) return null;
-  return Matrix4.fromList(data.cast<double>());
+  // The native side sends a row-major matrix, but Matrix4.fromList expects
+  // a column-major matrix, so we need to transpose it.
+  final list = data.cast<num>().map((e) => e.toDouble()).toList();
+  return Matrix4.fromList(list);
 }
 
 WallData _toWallData(Map<String, dynamic> data) {
