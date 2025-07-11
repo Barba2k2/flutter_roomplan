@@ -1,4 +1,8 @@
 import 'package:roomplan_flutter/roomplan_flutter.dart';
+import 'package:vector_math/vector_math_64.dart';
+
+import 'confidence.dart';
+import 'position.dart';
 
 /// The type of opening detected.
 enum OpeningType {
@@ -32,6 +36,12 @@ class OpeningData {
   /// The confidence level of the detected opening.
   final Confidence confidence;
 
+  /// The detailed dimensions (width, height, depth) from the new API.
+  final RoomDimensions? dimensions;
+
+  /// The 3D transformation matrix (position, rotation) from the new API.
+  final Matrix4? transform;
+
   /// Creates an [OpeningData].
   const OpeningData({
     required this.uuid,
@@ -40,5 +50,7 @@ class OpeningData {
     required this.width,
     required this.height,
     required this.confidence,
+    this.dimensions,
+    this.transform,
   });
 }
