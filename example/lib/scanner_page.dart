@@ -1,13 +1,8 @@
-import 'dart:async';
-
-import 'package:example/results_page.dart';
 import 'package:flutter/material.dart';
 import 'package:roomplan_flutter/roomplan_flutter.dart';
 
-/// A page that demonstrates how to use the `RoomPlanScanner`.
-///
-/// It provides a simple interface to start a room scan and
-/// navigates to the results page upon completion.
+import 'results_page.dart';
+
 class ScannerPage extends StatefulWidget {
   const ScannerPage({super.key});
 
@@ -16,14 +11,14 @@ class ScannerPage extends StatefulWidget {
 }
 
 class _ScannerPageState extends State<ScannerPage> {
-  late final RoomPlanScanner _roomPlanScanner;
+  String _scanStatus = 'Ready to scan';
   bool _isScanning = false;
+  late final RoomPlanScanner _roomPlanScanner;
 
   @override
   void initState() {
     super.initState();
     _roomPlanScanner = RoomPlanScanner();
-    _startScan();
   }
 
   @override
@@ -32,38 +27,50 @@ class _ScannerPageState extends State<ScannerPage> {
     super.dispose();
   }
 
-  /// Starts a new room scan session.
-  ///
-  /// Sets the state to `_isScanning = true` and waits for the user to
-  /// complete the scan. Then navigates to the results page.
-  Future<void> _startScan() async {
-    setState(() => _isScanning = true);
+  void _startScanning() async {
+    setState(() {
+      _isScanning = true;
+      _scanStatus = 'Scanning...';
+    });
+
     try {
+      // Listen to real-time updates from ScanResult objects
+      _roomPlanScanner.onScanResult.listen((scanResult) {
+        if (scanResult != null) {
+          setState(() {
+            _scanStatus = 'Scanning... (receiving updates)';
+          });
+        }
+      });
+
       final result = await _roomPlanScanner.startScan();
-      if (result == null) {
-        if (mounted) Navigator.of(context).pop();
-        return;
+
+      if (result != null) {
+        if (mounted) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => ResultsPage(scanResult: result),
+            ),
+          );
+        }
+      } else {
+        setState(() {
+          _scanStatus = 'Scan cancelled';
+        });
       }
-      if (mounted) {
-        await Navigator.of(context).pushReplacement(
-          MaterialPageRoute(
-            builder: (context) => ResultsPage(scanResult: result),
-          ),
-        );
-      }
-    } on ScanCancelledException {
-      if (mounted) Navigator.of(context).pop();
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error starting scan: $e')),
-        );
-        Navigator.of(context).pop();
-      }
+      setState(() {
+        _scanStatus = 'Error: $e';
+      });
     } finally {
-      if (mounted) {
-        setState(() => _isScanning = false);
-      }
+      setState(() {
+        _isScanning = false;
+        if (_scanStatus != 'Error: $_scanStatus' &&
+            _scanStatus != 'Scan cancelled') {
+          _scanStatus = 'Scan completed';
+        }
+      });
     }
   }
 
@@ -71,19 +78,42 @@ class _ScannerPageState extends State<ScannerPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('RoomPlan Scan'),
+        title: const Text('Room Scanner'),
+        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
       ),
       body: Center(
-        child: _isScanning
-            ? const Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  CircularProgressIndicator(),
-                  SizedBox(height: 16),
-                  Text("Initializing scanner..."),
-                ],
-              )
-            : const SizedBox.shrink(),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.view_in_ar,
+              size: 100,
+              color: Theme.of(context).primaryColor,
+            ),
+            const SizedBox(height: 20),
+            Text(
+              _scanStatus,
+              style: Theme.of(context).textTheme.titleLarge,
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 40),
+            ElevatedButton(
+              onPressed: _isScanning ? null : _startScanning,
+              style: ElevatedButton.styleFrom(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
+              ),
+              child: Text(
+                _isScanning ? 'Scanning...' : 'Start Room Scan',
+                style: const TextStyle(fontSize: 18),
+              ),
+            ),
+            if (_isScanning) ...[
+              const SizedBox(height: 20),
+              const CircularProgressIndicator(),
+            ],
+          ],
+        ),
       ),
     );
   }
