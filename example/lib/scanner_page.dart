@@ -39,7 +39,7 @@ class _ScannerPageState extends State<ScannerPage> {
   Future<void> _startScan() async {
     setState(() => _isScanning = true);
     try {
-      final result = await _roomPlanScanner.startScanning();
+      final result = await _roomPlanScanner.startScan();
       if (result == null) {
         if (mounted) Navigator.of(context).pop();
         return;
