@@ -1,5 +1,6 @@
 import 'package:example/src/widgets/objects_details_view.dart';
 import 'package:example/src/widgets/openings_details_view.dart';
+import 'package:example/src/widgets/paint_area_details_view.dart';
 import 'package:example/src/widgets/room_details_view.dart';
 import 'package:example/src/widgets/walls_details_view.dart';
 import 'package:flutter/material.dart';
@@ -15,7 +16,7 @@ class ResultsPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
-      length: 4,
+      length: 5,
       child: Scaffold(
         appBar: AppBar(
           title: const Text('Scan Results'),
@@ -26,6 +27,7 @@ class ResultsPage extends StatelessWidget {
               Tab(text: 'Walls'),
               Tab(text: 'Objects'),
               Tab(text: 'Openings'),
+              Tab(text: 'Paint Area'),
             ],
           ),
         ),
@@ -35,6 +37,7 @@ class ResultsPage extends StatelessWidget {
             WallsDetailsView(scanResult: scanResult),
             ObjectsDetailsView(scanResult: scanResult),
             OpeningsDetailsView(scanResult: scanResult),
+            PaintAreaDetailsView(scanResult: scanResult),
           ],
         ),
       ),
