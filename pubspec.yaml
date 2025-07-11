@@ -1,6 +1,6 @@
 name: roomplan_flutter
 description: A Flutter plugin for iOS that provides access to Apple's RoomPlan API, allowing you to easily scan an interior room and receive a 3D model with detailed measurements.
-version: 0.0.6
+version: 0.0.7
 homepage: https://github.com/Barba2k2/flutter_roomplan
 repository: https://github.com/Barba2k2/flutter_roomplan
 

@@ -1,3 +1,8 @@
+## 0.0.7
+
+- **Feature(example)**: Enhanced main.dart with comprehensive RoomPlanScanner example demonstrating proper initialization, real-time updates, and result handling.
+- **Improvement(example)**: Added complete working code example that shows practical usage of all major features including error handling and resource disposal.
+
 ## 0.0.6
 
 - **Feature**: Enhanced LiDAR detection with multi-method approach for better accuracy across different iOS devices and development environments.
