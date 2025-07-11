@@ -21,6 +21,12 @@ class RoomData {
   /// A list of all detected openings in the room.
   final List<OpeningData> openings;
 
+  /// The detected floor surface, if available.
+  final WallData? floor;
+
+  /// The detected ceiling surface, if available.
+  final WallData? ceiling;
+
   /// Creates a [RoomData].
   const RoomData({
     this.dimensions,
@@ -29,5 +35,7 @@ class RoomData {
     required this.doors,
     required this.windows,
     required this.openings,
+    this.floor,
+    this.ceiling,
   });
 }
