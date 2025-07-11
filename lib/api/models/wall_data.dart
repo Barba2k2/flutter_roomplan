@@ -1,4 +1,6 @@
 import 'package:roomplan_flutter/roomplan_flutter.dart';
+import 'package:vector_math/vector_math_64.dart';
+
 
 /// Represents a detected wall surface.
 class WallData {
@@ -23,6 +25,12 @@ class WallData {
   /// A list of openings (doors or windows) detected in this wall.
   final List<OpeningData> openings;
 
+  /// The detailed dimensions (width, height, depth) from the new API.
+  final RoomDimensions? dimensions;
+
+  /// The 3D transformation matrix (position, rotation) from the new API.
+  final Matrix4? transform;
+
   /// Creates a [WallData].
   const WallData({
     required this.uuid,
@@ -32,5 +40,7 @@ class WallData {
     required this.height,
     required this.confidence,
     required this.openings,
+    this.dimensions,
+    this.transform,
   });
 }
