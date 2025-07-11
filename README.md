@@ -13,7 +13,7 @@ First, add `roomplan_flutter` to your `pubspec.yaml` dependencies:
 
 ```yaml
 dependencies:
-  roomplan_flutter: ^0.0.3 # Replace with the latest version
+  roomplan_flutter: ^0.0.5 # Replace with the latest version
 ```
 
 Then, add the required `NSCameraUsageDescription` to your `ios/Runner/Info.plist` file to explain why your app needs camera access:
@@ -105,12 +105,15 @@ The plugin returns a `ScanResult` object, which contains a tree of structured da
   - `objects`: A list of `ObjectData` objects (e.g., table, chair).
   - `doors`: A list of `OpeningData` for doors.
   - `windows`: A list of `OpeningData` for windows.
+  - `floor`: A `WallData` object representing the floor.
+  - `ceiling`: A `WallData` object representing the ceiling.
 
 - `WallData`, `ObjectData`, `OpeningData`: These models describe a physical entity and share common fields:
 
   - `uuid`: A unique identifier for the entity.
   - `position`: A `Position` object (`Vector3`) representing the center point.
-  - `dimensions` / `width`, `height`, `length`: The size of the entity.
+  - `dimensions`: Detailed dimensions (`width`, `height`, `depth`) from the native API.
+  - `transform`: A `Matrix4` object for the 3D transform (position, rotation).
   - `confidence`: An enum (`Confidence.low`, `medium`, `high`) for the detected entity.
 
 - `ScanMetadata`: Contains metadata about the scanning session.
