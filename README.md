@@ -5,7 +5,7 @@ A Flutter plugin that allows you to use Apple's [RoomPlan API](https://developer
 ## Requirements
 
 - iOS 16.0+
-- A device with a LiDAR sensor is required (e.g., iPhone 12 Pro or newer Pro models, iPad Pro).
+- A device with a LiDAR sensor is required (e.g., iPhone 12 Pro or newer Pro models, iPhone 16 Pro/Pro Max, iPad Pro).
 
 ## Installation
 
@@ -13,7 +13,7 @@ First, add `roomplan_flutter` to your `pubspec.yaml` dependencies:
 
 ```yaml
 dependencies:
-  roomplan_flutter: ^0.0.5 # Replace with the latest version
+  roomplan_flutter: ^0.0.6 # Replace with the latest version
 ```
 
 Then, add the required `NSCameraUsageDescription` to your `ios/Runner/Info.plist` file to explain why your app needs camera access:
