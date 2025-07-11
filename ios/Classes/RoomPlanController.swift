@@ -1,9 +1,9 @@
 import ARKit
 import AVFoundation
+import Darwin
 import Flutter
 import Foundation
 import RoomPlan
-import os
 
 /// A singleton class that manages the RoomPlan session and communication with Flutter.
 ///
@@ -15,7 +15,6 @@ import os
 class RoomPlanController: NSObject, RoomCaptureSessionDelegate, FlutterStreamHandler {
   /// The shared singleton instance.
   static let shared = RoomPlanController()
-  private let logger = Logger(subsystem: "com.apple.RoomPlan", category: "RoomPlanController")
 
   /// The method channel used to communicate with Flutter.
   var channel: FlutterMethodChannel?
@@ -92,6 +91,7 @@ class RoomPlanController: NSObject, RoomCaptureSessionDelegate, FlutterStreamHan
   /// Called when the room layout is updated during a scan.
   public func captureSession(_ session: RoomCaptureSession, didUpdate room: CapturedRoom) {
     finalResults = room
+
     if let eventSink = eventSink {
       // Go to a background thread to do the heavy encoding work
       DispatchQueue.global(qos: .userInitiated).async {
@@ -119,6 +119,7 @@ class RoomPlanController: NSObject, RoomCaptureSessionDelegate, FlutterStreamHan
     _ session: RoomCaptureSession, didEndWith data: CapturedRoomData, error: Error?
   ) {
     endTime = Date()
+
     if let error = error {
       flutterResult?(
         FlutterError(code: "native_error", message: error.localizedDescription, details: nil))
@@ -132,7 +133,7 @@ class RoomPlanController: NSObject, RoomCaptureSessionDelegate, FlutterStreamHan
       return
     }
 
-    let hasLidar = ARWorldTrackingConfiguration.supportsSceneReconstruction(.mesh)
+    let hasLidar = detectLiDAR()
     let sessionDuration = endTime!.timeIntervalSince(startTime ?? Date())
 
     let metadata =
@@ -165,7 +166,10 @@ class RoomPlanController: NSObject, RoomCaptureSessionDelegate, FlutterStreamHan
   public func captureSession(
     _ session: RoomCaptureSession, didFailWith error: Error
   ) {
-    if (error as? RoomCaptureSession.Error) == .worldTrackingNotAvailable {
+    // Use a generic approach that works across all iOS versions
+    if error.localizedDescription.contains("world tracking")
+      || error.localizedDescription.lowercased().contains("not available")
+    {
       flutterResult?(
         FlutterError(
           code: "world_tracking_not_available",
@@ -189,5 +193,46 @@ class RoomPlanController: NSObject, RoomCaptureSessionDelegate, FlutterStreamHan
   func onCancel(withArguments arguments: Any?) -> FlutterError? {
     self.eventSink = nil
     return nil
+  }
+
+  /// Detects LiDAR capability using multiple methods for better accuracy
+  private func detectLiDAR() -> Bool {
+    let supportsSceneReconstruction = ARWorldTrackingConfiguration.supportsSceneReconstruction(
+      .mesh)
+    let hasLidarByModel = isLiDARDevice()
+
+    return supportsSceneReconstruction || hasLidarByModel
+  }
+
+  /// Checks if the current device model supports LiDAR
+  private func isLiDARDevice() -> Bool {
+    var systemInfo = utsname()
+    uname(&systemInfo)
+    let modelCode = withUnsafePointer(to: &systemInfo.machine) {
+      $0.withMemoryRebound(to: CChar.self, capacity: 1) {
+        ptr in String(cString: ptr)
+      }
+    }
+
+    let model = modelCode
+
+    // iPhone models with LiDAR
+    let lidarIPhones = [
+      "iPhone13,2", "iPhone13,3", "iPhone13,4",  // iPhone 12 Pro, 12 Pro Max
+      "iPhone14,2", "iPhone14,3",  // iPhone 13 Pro, 13 Pro Max
+      "iPhone15,2", "iPhone15,3",  // iPhone 14 Pro, 14 Pro Max
+      "iPhone16,1", "iPhone16,2",  // iPhone 15 Pro, 15 Pro Max
+      "iPhone17,1", "iPhone17,2",  // iPhone 16 Pro, 16 Pro Max
+    ]
+
+    // iPad models with LiDAR
+    let lidarIPads = [
+      "iPad8,9", "iPad8,10", "iPad8,11", "iPad8,12",  // iPad Pro 11" (4th gen), 12.9" (4th gen)
+      "iPad13,4", "iPad13,5", "iPad13,6", "iPad13,7", "iPad13,8", "iPad13,9", "iPad13,10",
+      "iPad13,11",  // iPad Pro 11" (5th gen), 12.9" (5th gen)
+      "iPad14,3", "iPad14,4", "iPad14,5", "iPad14,6",  // iPad Pro 11" (6th gen), 12.9" (6th gen)
+    ]
+
+    return lidarIPhones.contains(model) || lidarIPads.contains(model)
   }
 }
