@@ -22,6 +22,8 @@ class RoomPlanController: NSObject, RoomCaptureSessionDelegate, FlutterStreamHan
   private var roomCaptureView: RoomCaptureView?
   private var finalResults: CapturedRoom?
   private var flutterResult: FlutterResult?
+  private var startTime: Date?
+  private var endTime: Date?
 
   /// The event sink for the Flutter event channel.
   private var eventSink: FlutterEventSink?
@@ -94,7 +96,7 @@ class RoomPlanController: NSObject, RoomCaptureSessionDelegate, FlutterStreamHan
       // Go to a background thread to do the heavy encoding work
       DispatchQueue.global(qos: .userInitiated).async {
         do {
-          let json = try RoomPlanJSONConverter.convertToJSON(capturedRoom: room)
+          let json = try RoomPlanJSONConverter.convertToJSON(capturedRoom: room, metadata: [:])
           // Go back to the main thread to send the result to Flutter
           DispatchQueue.main.async {
             eventSink(json)
@@ -104,7 +106,7 @@ class RoomPlanController: NSObject, RoomCaptureSessionDelegate, FlutterStreamHan
           DispatchQueue.main.async {
             eventSink(
               FlutterError(
-                code: "serialization_error", message: "Failed to serialize room data",
+                code: "serialization_error", message: "Failed to serialize room data.",
                 details: error.localizedDescription))
           }
         }
@@ -116,6 +118,7 @@ class RoomPlanController: NSObject, RoomCaptureSessionDelegate, FlutterStreamHan
   public func captureSession(
     _ session: RoomCaptureSession, didEndWith data: CapturedRoomData, error: Error?
   ) {
+    endTime = Date()
     if let error = error {
       flutterResult?(
         FlutterError(code: "native_error", message: error.localizedDescription, details: nil))
@@ -129,13 +132,24 @@ class RoomPlanController: NSObject, RoomCaptureSessionDelegate, FlutterStreamHan
       return
     }
 
+    let hasLidar = ARWorldTrackingConfiguration.supportsSceneReconstruction(.mesh)
+    let sessionDuration = endTime!.timeIntervalSince(startTime ?? Date())
+
+    let metadata =
+      [
+        "session_duration": sessionDuration,
+        "device_model": UIDevice.current.model,
+        "has_lidar": hasLidar,
+      ] as [String: Any]
+
     do {
-      let json = try RoomPlanJSONConverter.convertToJSON(capturedRoom: finalResults)
+      let json = try RoomPlanJSONConverter.convertToJSON(
+        capturedRoom: finalResults, metadata: metadata)
       flutterResult?(json)
     } catch {
       flutterResult?(
         FlutterError(
-          code: "serialization_error", message: "Failed to serialize final room data",
+          code: "serialization_error", message: "Failed to serialize final room data.",
           details: error.localizedDescription))
     }
   }
@@ -144,7 +158,22 @@ class RoomPlanController: NSObject, RoomCaptureSessionDelegate, FlutterStreamHan
   public func captureSession(
     _ session: RoomCaptureSession, didStartWith configuration: RoomCaptureSession.Configuration
   ) {
+    startTime = Date()
+  }
 
+  /// Called when the scanning session fails.
+  public func captureSession(
+    _ session: RoomCaptureSession, didFailWith error: Error
+  ) {
+    if (error as? RoomCaptureSession.Error) == .worldTrackingNotAvailable {
+      flutterResult?(
+        FlutterError(
+          code: "world_tracking_not_available",
+          message: "World tracking is not available on this device.", details: nil))
+    } else {
+      flutterResult?(
+        FlutterError(code: "native_error", message: error.localizedDescription, details: nil))
+    }
   }
 
   // MARK: - FlutterStreamHandler
