@@ -2,15 +2,27 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:roomplan_flutter/roomplan_flutter.dart';
 import 'package:vector_math/vector_math_64.dart';
+import 'performance/optimized_mapper.dart';
 
+/// Performance-optimized JSON parsing entry point
 ScanResult? parseScanResult(String? jsonResult) {
+  // Performance optimization: Use optimized mapper for better performance
+  return OptimizedMapper.parseScanResult(jsonResult);
+}
+
+/// Legacy parsing method kept for compatibility and testing
+ScanResult? parseScanResultLegacy(String? jsonResult) {
   if (jsonResult == null) return null;
   try {
     final Map<String, dynamic> data = json.decode(jsonResult);
     return _toScanResult(data);
   } catch (e, stacktrace) {
-    debugPrint('Error parsing scan result: $e');
-    debugPrint(stacktrace.toString());
+    // Performance optimization: Only print debug info in debug mode
+    assert(() {
+      debugPrint('Error parsing scan result: $e');
+      debugPrint(stacktrace.toString());
+      return true;
+    }());
     return null;
   }
 }
