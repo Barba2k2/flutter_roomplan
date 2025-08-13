@@ -29,11 +29,11 @@ class RoomPlanController: NSObject, RoomCaptureSessionDelegate, FlutterStreamHan
 
   private override init() {}
 
-  /// Starts a new RoomPlan session.
+  /// Starts a new RoomPlan session with optional configuration.
   ///
   /// This method presents the `RoomCaptureView` and starts the scanning process.
   /// The `result` closure is called when the scan is finished or an error occurs.
-  func startSession(result: @escaping FlutterResult) {
+  func startSession(with configuration: [String: Any]? = nil, result: @escaping FlutterResult) {
     self.flutterResult = result
     self.finalResults = nil
 
@@ -73,19 +73,50 @@ class RoomPlanController: NSObject, RoomCaptureSessionDelegate, FlutterStreamHan
     }
     
     rootViewController.present(navVC, animated: true) { [weak self] in
-      self?.startCaptureSession(result: result)
+      self?.startCaptureSession(with: configuration, result: result)
     }
   }
   
   /// Starts the actual capture session after UI is presented
-  private func startCaptureSession(result: @escaping FlutterResult) {
-    let configuration = RoomCaptureSession.Configuration()
+  private func startCaptureSession(with configDict: [String: Any]? = nil, result: @escaping FlutterResult) {
+    let configuration = createConfiguration(from: configDict)
 
     do {
       roomCaptureView?.captureSession.run(configuration: configuration)
     } catch {
       result(FlutterError(code: "session_start_failed", message: "Failed to start capture session.", details: error.localizedDescription))
     }
+  }
+  
+  /// Creates a RoomCaptureSession.Configuration from Flutter configuration dictionary
+  private func createConfiguration(from configDict: [String: Any]?) -> RoomCaptureSession.Configuration {
+    let configuration = RoomCaptureSession.Configuration()
+    
+    guard let configDict = configDict else {
+      return configuration
+    }
+    
+    // Apply quality settings
+    if let qualityString = configDict["quality"] as? String {
+      switch qualityString {
+      case "fast":
+        // Optimize for speed - disable some features if possible
+        break
+      case "high":
+        // Optimize for accuracy - enable all features
+        break
+      case "balanced":
+        // Default balanced settings
+        break
+      default:
+        break
+      }
+    }
+    
+    // Note: RoomCaptureSession.Configuration in iOS 16.0 has limited customization options
+    // Most configuration will be handled at the app level for now
+    
+    return configuration
   }
   
   /// Performs comprehensive pre-flight checks before starting a scan
