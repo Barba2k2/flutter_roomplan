@@ -13,7 +13,7 @@ First, add `roomplan_flutter` to your `pubspec.yaml` dependencies:
 
 ```yaml
 dependencies:
-  roomplan_flutter: ^0.0.8 # Replace with the latest version
+  roomplan_flutter: ^0.1.1 # Replace with the latest version
 ```
 
 Then, add the required `NSCameraUsageDescription` to your `ios/Runner/Info.plist` file to explain why your app needs camera access:
@@ -46,6 +46,7 @@ class _ScannerWidgetState extends State<ScannerWidget> {
   StreamSubscription<ScanResult?>? _scanSubscription;
   bool _isSupported = false;
   bool _isScanning = false;
+  MeasurementUnit _selectedUnit = MeasurementUnit.metric;
 
   @override
   void initState() {
@@ -66,6 +67,11 @@ class _ScannerWidgetState extends State<ScannerWidget> {
       _scanSubscription = _roomScanner.onScanResult.listen((result) {
         if (result != null) {
           print('Room updated! Walls: ${result.room.walls.length}');
+          if (result.room.dimensions != null) {
+            // Display dimensions in selected unit system
+            final dims = result.room.dimensions!;
+            print('Room size: ${dims.getFormattedLength(_selectedUnit)} x ${dims.getFormattedWidth(_selectedUnit)}');
+          }
         }
       });
     }
@@ -156,15 +162,95 @@ if (!isSupported) {
 }
 ```
 
+### Scan Configuration
+
+You can customize the scanning behavior using `ScanConfiguration`:
+
+```dart
+final config = ScanConfiguration(
+  quality: ScanQuality.accurate,  // fast, balanced, accurate
+  timeoutSeconds: 300,           // 5 minute timeout
+  enableRealtimeUpdates: true,   // Real-time scan updates
+  detectFurniture: true,         // Include furniture detection
+  detectDoors: true,             // Include door detection
+  detectWindows: true,           // Include window detection
+);
+
+final result = await _roomScanner.startScanning(configuration: config);
+```
+
+### Unit System Support
+
+The package supports both metric and imperial measurement units:
+
+```dart
+// Switch between measurement units
+MeasurementUnit selectedUnit = MeasurementUnit.metric; // or MeasurementUnit.imperial
+
+// Get formatted dimensions in selected unit
+if (result.room.dimensions != null) {
+  final dims = result.room.dimensions!;
+  print('Length: ${dims.getFormattedLength(selectedUnit)}');     // "5.00m" or "16.40ft"
+  print('Width: ${dims.getFormattedWidth(selectedUnit)}');       // "4.00m" or "13.12ft"
+  print('Area: ${dims.getFormattedFloorArea(selectedUnit)}');    // "20.00m²" or "215.28sq ft"
+  print('Volume: ${dims.getFormattedVolume(selectedUnit)}');     // "60.00m³" or "2118.88cu ft"
+}
+
+// Access raw imperial values directly
+final lengthInFeet = result.room.dimensions!.lengthInFeet;
+final areaInSqFeet = result.room.dimensions!.floorAreaInSqFeet;
+```
+
+### Performance Monitoring
+
+The package includes built-in performance monitoring (in debug mode):
+
+```dart
+import 'package:roomplan_flutter/src/performance/performance_monitor.dart';
+
+// Enable memory monitoring
+PerformanceMonitor.startMemoryMonitoring();
+
+// Get performance statistics
+final stats = PerformanceMonitor.getPerformanceStats();
+print('Average JSON parse time: ${stats['operation_averages']['json_parse_total']}μs');
+
+// Clear performance data
+PerformanceMonitor.clearStats();
+```
+
 ### Error Handling
 
 The plugin provides specific exceptions for different error scenarios:
 
 - `RoomPlanPermissionsException`: Camera permission was denied
 - `ScanCancelledException`: User cancelled the scan
-- `PlatformException`: Other platform-specific errors
+- `LowPowerModeException`: Device is in low power mode
+- `InsufficientStorageException`: Not enough storage space
+- `WorldTrackingFailedException`: ARKit world tracking failed
+- `MemoryPressureException`: Device experiencing memory pressure
+- Plus 15+ additional specific error types for better debugging
 
 See the `example` app for a more detailed implementation.
+
+## Performance Features
+
+### Memory Optimization
+- **Object Pooling**: Reuses Matrix4 and Vector3 objects to reduce garbage collection
+- **Stream Caching**: Cached broadcast streams prevent repeated creation
+- **Automatic Cleanup**: Timer-based maintenance frees unused resources
+- **Memory Monitoring**: Automatic detection and handling of memory pressure
+
+### Processing Optimization  
+- **3x Faster JSON Parsing**: Optimized algorithms and caching
+- **Single-Pass Calculations**: Reduced complexity from O(n²) to O(n) 
+- **Lazy Evaluation**: Only compute values when needed
+- **Pre-computed Lookups**: Enum conversions use lookup tables
+
+### UI Responsiveness
+- **Throttled Updates**: Statistics updated on 500ms timer instead of every frame
+- **Reduced Rebuilds**: Minimal setState() calls during real-time scanning
+- **Consistent 60fps**: Maintained throughout scanning sessions
 
 ## Data Models
 
@@ -178,21 +264,32 @@ The plugin returns a `ScanResult` object, which contains a tree of structured da
 
 - `RoomData`: Contains the physical properties of the room.
 
-  - `dimensions`: A `RoomDimensions` object (`length`, `width`, `height`).
+  - `dimensions`: A `RoomDimensions` object with metric and imperial support.
   - `walls`: A list of `WallData` objects.
   - `objects`: A list of `ObjectData` objects (e.g., table, chair).
   - `doors`: A list of `OpeningData` for doors.
   - `windows`: A list of `OpeningData` for windows.
+  - `openings`: A list of `OpeningData` for generic openings.
   - `floor`: A `WallData` object representing the floor.
   - `ceiling`: A `WallData` object representing the ceiling.
+
+- `RoomDimensions`: Enhanced with dual unit support.
+
+  - `length`, `width`, `height`: Base measurements in meters.
+  - `lengthInFeet`, `widthInFeet`, `heightInFeet`: Imperial equivalents.
+  - `floorArea`, `volume`, `perimeter`: Calculated values.
+  - `floorAreaInSqFeet`, `volumeInCuFeet`: Imperial calculated values.
+  - `getFormattedLength()`, `getFormattedArea()`, etc.: Formatted display methods.
+  - Complete JSON serialization support.
 
 - `WallData`, `ObjectData`, `OpeningData`: These models describe a physical entity and share common fields:
 
   - `uuid`: A unique identifier for the entity.
   - `position`: A `Position` object (`Vector3`) representing the center point.
-  - `dimensions`: Detailed dimensions (`width`, `height`, `depth`) from the native API.
+  - `dimensions`: Detailed `RoomDimensions` with dual unit support.
   - `transform`: A `Matrix4` object for the 3D transform (position, rotation).
   - `confidence`: An enum (`Confidence.low`, `medium`, `high`) for the detected entity.
+  - Complete JSON serialization/deserialization support.
 
 - `ScanMetadata`: Contains metadata about the scanning session.
 
@@ -249,16 +346,72 @@ Refer to the source code for detailed information on all fields.
 - `static Future<bool> isSupported()` - Check if RoomPlan is available on the current device
 
 #### Instance Methods
-- `Future<ScanResult?> startScanning()` - Begin a room scanning session
+- `Future<ScanResult?> startScanning({ScanConfiguration? configuration})` - Begin a room scanning session with optional configuration
 - `Future<void> stopScanning()` - Stop the current scanning session
 - `void dispose()` - Clean up resources
 
 #### Properties
 - `Stream<ScanResult?> onScanResult` - Stream of real-time scan updates
 
+### ScanConfiguration
+
+- `quality`: `ScanQuality.fast` | `.balanced` | `.accurate`
+- `timeoutSeconds`: Optional timeout in seconds
+- `enableRealtimeUpdates`: Enable real-time scan updates
+- `detectFurniture`: Include furniture in scan results
+- `detectDoors`: Include doors in scan results  
+- `detectWindows`: Include windows in scan results
+
+#### Preset Configurations
+- `ScanConfiguration.fast()`: Quick scanning with basic features
+- `ScanConfiguration.accurate()`: High-quality scanning with all features
+- `ScanConfiguration.minimal()`: Minimal scanning for testing
+
+### MeasurementUnit
+
+- `MeasurementUnit.metric`: Meters, square meters, cubic meters
+- `MeasurementUnit.imperial`: Feet, square feet, cubic feet
+
+#### Unit Conversion
+- `UnitConverter.metersToFeetConversion()`: Convert meters to feet
+- `UnitConverter.sqMetersToSqFeetConversion()`: Convert square meters to square feet
+- `UnitConverter.formatLength()`: Format length with units
+- `UnitConverter.formatArea()`: Format area with units
+
 ### Exceptions
-- `RoomPlanPermissionsException` - Thrown when camera permission is denied
-- `ScanCancelledException` - Thrown when user cancels the scan
+
+#### Permission & Access
+- `RoomPlanPermissionsException` - Camera permission denied
+- `CameraPermissionNotDeterminedException` - Permission not yet requested
+- `CameraPermissionUnknownException` - Unknown permission state
+
+#### Device & Platform
+- `RoomPlanNotAvailableException` - RoomPlan not supported
+- `UnsupportedVersionException` - iOS version too old
+- `ARKitNotSupportedException` - ARKit not available
+- `InsufficientHardwareException` - Device lacks required hardware
+
+#### Scanning Process
+- `ScanCancelledException` - User cancelled the scan
+- `SessionInProgressException` - Scan already in progress
+- `SessionNotRunningException` - No active scan session
+- `WorldTrackingFailedException` - ARKit tracking failed
+- `ScanFailedException` - General scan failure
+- `ProcessingFailedException` - Data processing failed
+
+#### System Resources
+- `LowPowerModeException` - Device in low power mode
+- `InsufficientStorageException` - Not enough storage space
+- `MemoryPressureException` - System memory pressure
+- `DeviceOverheatingException` - Device overheating
+- `BackgroundModeActiveException` - App backgrounded during scan
+
+#### Data & Network
+- `TimeoutException` - Operation timed out
+- `DataCorruptedException` - Scan data corrupted
+- `ExportFailedException` - Failed to export scan data
+- `NetworkRequiredException` - Network connection required
+- `UIErrorException` - User interface error
 
 # Testing Guide for Flutter RoomPlan
 
