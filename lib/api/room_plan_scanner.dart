@@ -20,6 +20,13 @@ class RoomPlanScanner {
   /// Private constructor for initializing the scanner.
   RoomPlanScanner._(this._channel, this.onScanResult);
 
+  /// Checks if RoomPlan is supported on the current device.
+  ///
+  /// Returns true if the device is running iOS 16+ and has LiDAR support.
+  static Future<bool> isSupported() async {
+    return RoomPlanChannel.isSupported();
+  }
+
   /// Creates and initializes a [RoomPlanScanner].
   ///
   /// A [RoomPlanChannel] can be provided for testing purposes.
@@ -42,9 +49,9 @@ class RoomPlanScanner {
 
   /// Starts a new room scanning session.
   ///
-  /// Returns a [RoomPlanResult] upon completion, or null if the scan
+  /// Returns a [ScanResult] upon completion, or null if the scan
   /// is cancelled or fails.
-  Future<ScanResult?> startScan() async {
+  Future<ScanResult?> startScanning() async {
     final result = await _channel.startRoomCapture();
     if (result is String) {
       return parseScanResult(result);
@@ -54,8 +61,8 @@ class RoomPlanScanner {
 
   /// Stops the current scanning session.
   ///
-  /// The final result will be delivered via the Future returned by [startScan].
-  Future<void> stopScan() async {
+  /// The final result will be delivered via the Future returned by [startScanning].
+  Future<void> stopScanning() async {
     return _channel.stopRoomCapture();
   }
 
