@@ -16,10 +16,14 @@ ScanResult? parseScanResult(String? jsonResult) {
 }
 
 ScanResult _toScanResult(Map<String, dynamic> data) {
+  // Handle case where data is directly the room data (like in our test JSON)
+  final roomData = data['room'] as Map<String, dynamic>? ?? data;
+  
   return ScanResult(
-    room: _toRoomData(data['room'] as Map<String, dynamic>),
+    room: _toRoomData(roomData),
     metadata: _toScanMetadata(data['metadata'] as Map<String, dynamic>?),
-    confidence: _toScanConfidence(data['room'] as Map<String, dynamic>?),
+    confidence: _toScanConfidence(data['confidence'] as Map<String, dynamic>? ?? 
+                                 roomData['confidence'] as Map<String, dynamic>?),
   );
 }
 
@@ -32,7 +36,8 @@ RoomData _toRoomData(Map<String, dynamic> data) {
       : null;
 
   return RoomData(
-    dimensions: floor?.dimensions,
+    dimensions: _toRoomDimensions(data['dimensions'] as Map<String, dynamic>?) ?? 
+                floor?.dimensions,
     walls: (data['walls'] as List? ?? [])
         .map((w) => _toWallData(w as Map<String, dynamic>))
         .toList(),
@@ -58,9 +63,9 @@ RoomData _toRoomData(Map<String, dynamic> data) {
 RoomDimensions? _toRoomDimensions(Map<String, dynamic>? data) {
   if (data == null) return null;
   return RoomDimensions(
-    length: (data['z'] as num? ?? 0.0).toDouble(),
-    width: (data['x'] as num? ?? 0.0).toDouble(),
-    height: (data['y'] as num? ?? 0.0).toDouble(),
+    length: (data['x'] as num? ?? 0.0).toDouble(),
+    width: (data['y'] as num? ?? 0.0).toDouble(),
+    height: (data['z'] as num? ?? 0.0).toDouble(),
   );
 }
 
@@ -153,9 +158,11 @@ ScanMetadata _toScanMetadata(Map<String, dynamic>? data) {
     );
   }
 
-  // Parse duration from a double representing seconds
-  final durationInSeconds =
-      double.tryParse(data['session_duration'] ?? '0.0') ?? 0.0;
+  // Parse duration from different possible formats
+  final sessionDuration = data['session_duration'];
+  final durationInSeconds = sessionDuration is num 
+      ? sessionDuration.toDouble()
+      : double.tryParse(sessionDuration?.toString() ?? '0.0') ?? 0.0;
   final scanDuration =
       Duration(microseconds: (durationInSeconds * 1000000).round());
 
@@ -170,14 +177,26 @@ ScanMetadata _toScanMetadata(Map<String, dynamic>? data) {
   );
 }
 
-ScanConfidence _toScanConfidence(Map<String, dynamic>? roomData) {
-  if (roomData == null) {
+ScanConfidence _toScanConfidence(Map<String, dynamic>? confidenceData) {
+  if (confidenceData == null) {
     return const ScanConfidence(
-      overall: 0,
-      wallAccuracy: 0,
-      dimensionAccuracy: 0,
+      overall: 0.0,
+      wallAccuracy: 0.0,
+      dimensionAccuracy: 0.0,
     );
   }
+
+  // If it's a simple confidence object with direct values
+  if (confidenceData.containsKey('overall')) {
+    return ScanConfidence(
+      overall: (confidenceData['overall'] as num?)?.toDouble() ?? 0.0,
+      wallAccuracy: (confidenceData['wallAccuracy'] as num?)?.toDouble() ?? 0.0,
+      dimensionAccuracy: (confidenceData['dimensionAccuracy'] as num?)?.toDouble() ?? 0.0,
+    );
+  }
+
+  // Fallback to calculating from room data
+  final roomData = confidenceData;
 
   double confidenceToDouble(String? confidence) {
     switch (confidence) {
