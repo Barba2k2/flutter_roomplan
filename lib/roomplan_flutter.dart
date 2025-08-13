@@ -10,6 +10,7 @@ export 'api/room_plan_scanner.dart';
 
 // Public data models
 export 'api/models/confidence.dart';
+export 'api/models/measurement_unit.dart';
 export 'api/models/object_data.dart';
 export 'api/models/opening_data.dart';
 export 'api/models/position.dart';
