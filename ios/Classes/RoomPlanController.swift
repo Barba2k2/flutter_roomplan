@@ -37,6 +37,17 @@ class RoomPlanController: NSObject, RoomCaptureSessionDelegate, FlutterStreamHan
     self.flutterResult = result
     self.finalResults = nil
 
+    // Pre-flight checks with detailed error codes
+    do {
+      try performPreflightChecks()
+    } catch let error as RoomPlanError {
+      result(FlutterError(code: error.code, message: error.message, details: error.details))
+      return
+    } catch {
+      result(FlutterError(code: "unknown_error", message: "An unexpected error occurred.", details: error.localizedDescription))
+      return
+    }
+
     roomCaptureView = RoomCaptureView(frame: .zero)
     roomCaptureView?.captureSession.delegate = self
 
@@ -55,11 +66,81 @@ class RoomPlanController: NSObject, RoomCaptureSessionDelegate, FlutterStreamHan
 
     let rootViewController = UIApplication.shared.windows.first(where: \.isKeyWindow)?
       .rootViewController
-    rootViewController?.present(navVC, animated: true)
-
+    
+    guard let rootViewController = rootViewController else {
+      result(FlutterError(code: "ui_error", message: "Unable to access root view controller.", details: "The app's UI hierarchy might not be properly initialized."))
+      return
+    }
+    
+    rootViewController.present(navVC, animated: true) { [weak self] in
+      self?.startCaptureSession(result: result)
+    }
+  }
+  
+  /// Starts the actual capture session after UI is presented
+  private func startCaptureSession(result: @escaping FlutterResult) {
     let configuration = RoomCaptureSession.Configuration()
 
-    roomCaptureView?.captureSession.run(configuration: configuration)
+    do {
+      roomCaptureView?.captureSession.run(configuration: configuration)
+    } catch {
+      result(FlutterError(code: "session_start_failed", message: "Failed to start capture session.", details: error.localizedDescription))
+    }
+  }
+  
+  /// Performs comprehensive pre-flight checks before starting a scan
+  private func performPreflightChecks() throws {
+    // Check iOS version
+    guard #available(iOS 16.0, *) else {
+      throw RoomPlanError.unsupportedVersion
+    }
+    
+    // Check RoomPlan availability
+    guard RoomCaptureSession.isSupported else {
+      throw RoomPlanError.roomPlanNotSupported
+    }
+    
+    // Check camera permission
+    let cameraAuthStatus = AVCaptureDevice.authorizationStatus(for: .video)
+    switch cameraAuthStatus {
+    case .denied, .restricted:
+      throw RoomPlanError.cameraPermissionDenied
+    case .notDetermined:
+      throw RoomPlanError.cameraPermissionNotDetermined
+    case .authorized:
+      break
+    @unknown default:
+      throw RoomPlanError.cameraPermissionUnknown
+    }
+    
+    // Check ARKit availability
+    guard ARWorldTrackingConfiguration.isSupported else {
+      throw RoomPlanError.arKitNotSupported
+    }
+    
+    // Check device capabilities
+    let hasRequiredFeatures = ARWorldTrackingConfiguration.supportsSceneReconstruction(.mesh) || isLiDARDevice()
+    guard hasRequiredFeatures else {
+      throw RoomPlanError.insufficientHardware
+    }
+    
+    // Check system resources
+    if ProcessInfo.processInfo.isLowPowerModeEnabled {
+      throw RoomPlanError.lowPowerMode
+    }
+    
+    // Check available storage (need at least 100MB for scan data)
+    let freeSpace = try getAvailableStorage()
+    if freeSpace < 100 * 1024 * 1024 { // 100MB in bytes
+      throw RoomPlanError.insufficientStorage
+    }
+  }
+  
+  /// Gets available storage space in bytes
+  private func getAvailableStorage() throws -> Int64 {
+    let documentDirectory = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
+    let values = try documentDirectory.resourceValues(forKeys: [.volumeAvailableCapacityKey])
+    return values.volumeAvailableCapacity ?? 0
   }
 
   /// Called when the user taps the 'Done' button in the scanning UI.
@@ -166,17 +247,37 @@ class RoomPlanController: NSObject, RoomCaptureSessionDelegate, FlutterStreamHan
   public func captureSession(
     _ session: RoomCaptureSession, didFailWith error: Error
   ) {
-    // Use a generic approach that works across all iOS versions
-    if error.localizedDescription.contains("world tracking")
-      || error.localizedDescription.lowercased().contains("not available")
-    {
-      flutterResult?(
-        FlutterError(
-          code: "world_tracking_not_available",
-          message: "World tracking is not available on this device.", details: nil))
+    let roomPlanError = classifyError(error)
+    flutterResult?(
+      FlutterError(
+        code: roomPlanError.code,
+        message: roomPlanError.message,
+        details: roomPlanError.details
+      )
+    )
+  }
+  
+  /// Classifies native errors into specific RoomPlanError types
+  private func classifyError(_ error: Error) -> RoomPlanError {
+    let errorDescription = error.localizedDescription.lowercased()
+    
+    // Check for specific error patterns
+    if errorDescription.contains("world tracking") || errorDescription.contains("not available") {
+      return .worldTrackingFailed
+    } else if errorDescription.contains("memory") || errorDescription.contains("resources") {
+      return .memoryPressure
+    } else if errorDescription.contains("permission") || errorDescription.contains("camera") {
+      return .cameraPermissionDenied
+    } else if errorDescription.contains("background") {
+      return .backgroundModeActive
+    } else if errorDescription.contains("thermal") || errorDescription.contains("overheat") {
+      return .deviceOverheating
+    } else if errorDescription.contains("timeout") {
+      return .timeout("Room scanning session")
+    } else if errorDescription.contains("corrupt") || errorDescription.contains("invalid") {
+      return .dataCorrupted(error.localizedDescription)
     } else {
-      flutterResult?(
-        FlutterError(code: "native_error", message: error.localizedDescription, details: nil))
+      return .processingFailed(error.localizedDescription)
     }
   }
 
