@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 import 'package:flutter/services.dart';
 import 'package:roomplan_flutter/roomplan_flutter.dart';
 
@@ -41,13 +42,61 @@ class RoomPlanChannel {
     try {
       return await _channel.invokeMethod('startRoomCapture');
     } on PlatformException catch (e) {
-      if (e.code == 'camera_permission_denied') {
-        throw RoomPlanPermissionsException();
+      switch (e.code) {
+        case 'camera_permission_denied':
+          throw RoomPlanPermissionsException();
+        case 'camera_permission_not_determined':
+          throw CameraPermissionNotDeterminedException();
+        case 'camera_permission_unknown':
+          throw CameraPermissionUnknownException();
+        case 'CANCELED':
+          throw ScanCancelledException();
+        case 'not_available':
+        case 'roomplan_not_supported':
+          throw RoomPlanNotAvailableException();
+        case 'unsupported_version':
+          throw UnsupportedVersionException();
+        case 'arkit_not_supported':
+          throw ARKitNotSupportedException();
+        case 'insufficient_hardware':
+          throw InsufficientHardwareException();
+        case 'low_power_mode':
+          throw LowPowerModeException();
+        case 'insufficient_storage':
+          throw InsufficientStorageException();
+        case 'session_in_progress':
+          throw SessionInProgressException();
+        case 'session_not_running':
+          throw SessionNotRunningException();
+        case 'world_tracking_failed':
+          throw WorldTrackingFailedException();
+        case 'memory_pressure':
+          throw MemoryPressureException();
+        case 'background_mode_active':
+          throw BackgroundModeActiveException();
+        case 'device_overheating':
+          throw DeviceOverheatingException();
+        case 'network_required':
+          throw NetworkRequiredException();
+        case 'timeout':
+          throw TimeoutException(e.message ?? 'Unknown operation');
+        case 'data_corrupted':
+          throw DataCorruptedException(e.message ?? 'Unknown error');
+        case 'export_failed':
+          throw ExportFailedException(e.message ?? 'Unknown error');
+        case 'ui_error':
+          throw UIErrorException(e.message ?? 'Unknown error');
+        case 'session_start_failed':
+          throw SessionStartFailedException(e.message ?? 'Unknown error');
+        case 'scan_failed':
+          throw ScanFailedException(e.message ?? 'Unknown error');
+        case 'processing_failed':
+          throw ProcessingFailedException(e.message ?? 'Unknown error');
+        default:
+          throw NativeChannelException('${e.code}: ${e.message}');
       }
-      if (e.code == 'CANCELED') {
-        throw ScanCancelledException();
-      }
-      rethrow;
+    } catch (e) {
+      throw RoomPlanScanningErrorException('Unexpected error: $e');
     }
   }
 
@@ -55,8 +104,23 @@ class RoomPlanChannel {
   Future<void> stopRoomCapture() async {
     try {
       await _channel.invokeMethod('stopRoomCapture');
-    } on PlatformException {
-      rethrow;
+    } on PlatformException catch (e) {
+      throw NativeChannelException('Failed to stop scan: ${e.code}: ${e.message}');
+    } catch (e) {
+      throw RoomPlanScanningErrorException('Unexpected error stopping scan: $e');
+    }
+  }
+
+  static Future<bool> isSupported() async {
+    if (!Platform.isIOS) return false;
+    
+    try {
+      // Directly use the MethodChannel for this static method
+      const MethodChannel staticChannel = MethodChannel('roomplan_flutter/method_channel');
+      final result = await staticChannel.invokeMethod('isSupported');
+      return result as bool? ?? false;
+    } catch (e) {
+      return false;
     }
   }
 
