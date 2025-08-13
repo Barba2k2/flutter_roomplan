@@ -36,7 +36,8 @@ void main() {
       final result = parseScanResult(json);
       expect(result, isNotNull);
       expect(result, isA<ScanResult>());
-      expect(result?.room.dimensions, isNull);
+      expect(result?.room.walls, isEmpty);
+      expect(result?.confidence.overall, equals(0.0));
     });
 
     test('parseScanResult returns null for null input', () {
