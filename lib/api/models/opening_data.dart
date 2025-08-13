@@ -1,9 +1,6 @@
 import 'package:roomplan_flutter/roomplan_flutter.dart';
 import 'package:vector_math/vector_math_64.dart';
 
-import 'confidence.dart';
-import 'position.dart';
-
 /// The type of opening detected.
 enum OpeningType {
   /// A door opening.
