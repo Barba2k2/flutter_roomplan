@@ -10,19 +10,40 @@ import 'package:roomplan_flutter/roomplan_flutter.dart';
 class RoomPlanChannel {
   final MethodChannel _channel;
   final EventChannel _eventChannel;
-
+  
+  // Performance optimization: Use single subscription controllers to reduce memory overhead
   final StreamController<Map<String, dynamic>> _scanResultController =
-      StreamController.broadcast();
+      StreamController<Map<String, dynamic>>();
 
   final StreamController<dynamic> _scanUpdateController =
-      StreamController.broadcast();
+      StreamController<dynamic>();
+      
+  // Performance optimization: Stream subscription management
+  StreamSubscription<dynamic>? _eventSubscription;
+  Timer? _cleanupTimer;
+  bool _isDisposed = false;
+  
+  // Performance optimization: Stream caching to avoid repeated broadcast stream creation
+  Stream<Map<String, dynamic>>? _cachedScanResultStream;
+  Stream<dynamic>? _cachedScanUpdateStream;
 
   /// A stream for the final scan result, emitted when the user finishes.
-  Stream<Map<String, dynamic>> get scanResultStream =>
-      _scanResultController.stream;
+  /// Performance optimization: Cache broadcast streams to avoid repeated creation.
+  Stream<Map<String, dynamic>> get scanResultStream {
+    if (_isDisposed) {
+      throw StateError('RoomPlanChannel has been disposed');
+    }
+    return _cachedScanResultStream ??= _scanResultController.stream.asBroadcastStream();
+  }
 
   /// A stream for real-time updates during an active scan.
-  Stream<dynamic> get scanUpdateStream => _scanUpdateController.stream;
+  /// Performance optimization: Cache broadcast streams to avoid repeated creation.
+  Stream<dynamic> get scanUpdateStream {
+    if (_isDisposed) {
+      throw StateError('RoomPlanChannel has been disposed');
+    }
+    return _cachedScanUpdateStream ??= _scanUpdateController.stream.asBroadcastStream();
+  }
 
   /// Creates a [RoomPlanChannel].
   ///
@@ -32,9 +53,53 @@ class RoomPlanChannel {
             channel ?? const MethodChannel('roomplan_flutter/method_channel'),
         _eventChannel = eventChannel ??
             const EventChannel('roomplan_flutter/event_channel') {
-    _eventChannel.receiveBroadcastStream().listen((event) {
-      _scanUpdateController.add(event);
+    _initializeEventListener();
+    _scheduleCleanupTimer();
+  }
+  
+  /// Performance optimization: Initialize event listener with proper error handling and cleanup
+  void _initializeEventListener() {
+    if (_isDisposed) return;
+    
+    _eventSubscription = _eventChannel.receiveBroadcastStream().listen(
+      (event) {
+        if (!_isDisposed && !_scanUpdateController.isClosed) {
+          _scanUpdateController.add(event);
+        }
+      },
+      onError: (error) {
+        if (!_isDisposed && !_scanUpdateController.isClosed) {
+          _scanUpdateController.addError(error);
+        }
+      },
+      cancelOnError: false,
+    );
+  }
+  
+  /// Performance optimization: Schedule automatic cleanup after inactivity
+  void _scheduleCleanupTimer() {
+    _cleanupTimer?.cancel();
+    _cleanupTimer = Timer(const Duration(minutes: 5), () {
+      if (!_isDisposed) {
+        _performMaintenanceCleanup();
+      }
     });
+  }
+  
+  /// Performance optimization: Periodic maintenance to free unused resources
+  void _performMaintenanceCleanup() {
+    if (_isDisposed) return;
+    
+    // Reset cached streams if no active listeners
+    if (_cachedScanResultStream != null && !_scanResultController.hasListener) {
+      _cachedScanResultStream = null;
+    }
+    if (_cachedScanUpdateStream != null && !_scanUpdateController.hasListener) {
+      _cachedScanUpdateStream = null;
+    }
+    
+    // Schedule next cleanup
+    _scheduleCleanupTimer();
   }
 
   /// Calls the native side to start a room scanning session.
@@ -125,9 +190,26 @@ class RoomPlanChannel {
     }
   }
 
-  /// Closes the stream controllers.
+  /// Closes the stream controllers and cancels all subscriptions.
+  /// Performance optimization: Comprehensive cleanup to prevent memory leaks.
   void dispose() {
-    _scanResultController.close();
-    _scanUpdateController.close();
+    if (_isDisposed) return;
+    _isDisposed = true;
+    
+    // Cancel timers and subscriptions
+    _cleanupTimer?.cancel();
+    _eventSubscription?.cancel();
+    
+    // Clear cached streams
+    _cachedScanResultStream = null;
+    _cachedScanUpdateStream = null;
+    
+    // Close controllers
+    if (!_scanResultController.isClosed) {
+      _scanResultController.close();
+    }
+    if (!_scanUpdateController.isClosed) {
+      _scanUpdateController.close();
+    }
   }
 }
