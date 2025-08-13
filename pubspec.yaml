@@ -3,6 +3,17 @@ description: A Flutter plugin for iOS that provides access to Apple's RoomPlan A
 version: 0.0.8
 homepage: https://github.com/Barba2k2/flutter_roomplan
 repository: https://github.com/Barba2k2/flutter_roomplan
+issue_tracker: https://github.com/Barba2k2/flutter_roomplan/issues
+
+topics:
+  - roomplan
+  - lidar
+  - ios
+  - scanning
+  - apple
+
+platforms:
+  ios:
 
 environment:
   sdk: '>=3.0.0 <4.0.0'
