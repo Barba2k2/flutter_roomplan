@@ -47,11 +47,14 @@ class RoomPlanScanner {
     return RoomPlanScanner._(channel, onScanResult);
   }
 
-  /// Starts a new room scanning session.
+  /// Starts a new room scanning session with optional configuration.
+  ///
+  /// [configuration] allows you to customize the scanning behavior.
+  /// If not provided, default settings will be used.
   ///
   /// Returns a [ScanResult] upon completion, or null if the scan
   /// is cancelled or fails.
-  Future<ScanResult?> startScanning() async {
+  Future<ScanResult?> startScanning({ScanConfiguration? configuration}) async {
     final result = await _channel.startRoomCapture();
     if (result is String) {
       return parseScanResult(result);
