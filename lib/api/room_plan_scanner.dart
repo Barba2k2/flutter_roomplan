@@ -30,20 +30,27 @@ class RoomPlanScanner {
   /// Creates and initializes a [RoomPlanScanner].
   ///
   /// A [RoomPlanChannel] can be provided for testing purposes.
+  /// Performance optimization: Lazy stream initialization and efficient error handling.
   factory RoomPlanScanner({RoomPlanChannel? roomPlanChannel}) {
     final channel = roomPlanChannel ?? RoomPlanChannel();
-    final onScanResult = channel.scanUpdateStream.map((result) {
-      try {
-        if (result is String) {
-          return parseScanResult(result);
-        }
-        return null;
-      } catch (e, stacktrace) {
-        debugPrint('Error parsing scan update: $e');
-        debugPrint(stacktrace.toString());
-        return null;
-      }
-    }).asBroadcastStream();
+    
+    // Performance optimization: Use lazy stream transformation to avoid unnecessary processing
+    final onScanResult = channel.scanUpdateStream
+        .where((result) => result is String)
+        .map<ScanResult?>((result) {
+          try {
+            return parseScanResult(result as String);
+          } catch (e, stacktrace) {
+            // Performance optimization: Only print debug info in debug mode
+            assert(() {
+              debugPrint('Error parsing scan update: $e');
+              debugPrint(stacktrace.toString());
+              return true;
+            }());
+            return null;
+          }
+        });
+    
     return RoomPlanScanner._(channel, onScanResult);
   }
 
