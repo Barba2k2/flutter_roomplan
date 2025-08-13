@@ -16,6 +16,7 @@ export 'api/models/position.dart';
 export 'api/models/room_data.dart';
 export 'api/models/room_dimensions.dart';
 export 'api/models/scan_confidence.dart';
+export 'api/models/scan_configuration.dart';
 export 'api/models/scan_metadata.dart';
 export 'api/models/scan_result.dart';
 export 'api/models/wall_data.dart';
