@@ -1,5 +1,8 @@
 import Flutter
 import UIKit
+#if canImport(RoomPlan)
+import RoomPlan
+#endif
 
 /// The main plugin class for the roomplan_flutter package.
 ///
@@ -31,15 +34,33 @@ public class SwiftFlutterRoomplanPlugin: NSObject, FlutterPlugin {
       RoomPlanController.shared.startSession(result: result)
     case "stopRoomCapture":
       RoomPlanController.shared.stopSession(result: result)
-    case "isRoomPlanSupported":
-      if #available(iOS 16.0, *) {
-        result(true)
-      } else {
-        result(false)
-      }
+    case "isSupported":
+      checkRoomPlanSupport(result: result)
     default:
       result(FlutterMethodNotImplemented)
     }
+  }
+  
+  /// Checks if RoomPlan is supported on the current device.
+  ///
+  /// This method checks for iOS version compatibility and LiDAR sensor availability.
+  private func checkRoomPlanSupport(result: @escaping FlutterResult) {
+    guard #available(iOS 16.0, *) else {
+      result(false)
+      return
+    }
+    
+    // Check if device has LiDAR sensor and RoomPlan is available
+    #if canImport(RoomPlan)
+    // Check if RoomCaptureSession is available (requires LiDAR)
+    if RoomCaptureSession.isSupported {
+      result(true)
+    } else {
+      result(false)
+    }
+    #else
+    result(false)
+    #endif
   }
 }
 
@@ -54,13 +75,13 @@ class RoomPlanFallbackHandler: NSObject, FlutterPlugin {
 
   public func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
     switch call.method {
-    case "isRoomPlanSupported":
+    case "isSupported":
       result(false)
     case "startRoomCapture", "stopRoomCapture":
       result(
         FlutterError(
-          code: "UNSUPPORTED",
-          message: "RoomPlan is only available on iOS 16.0 and later.",
+          code: "not_available",
+          message: "RoomPlan is only available on iOS 16.0 and later with LiDAR sensor.",
           details: nil))
     default:
       result(FlutterMethodNotImplemented)
