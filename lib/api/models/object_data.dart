@@ -1,8 +1,6 @@
 import 'package:roomplan_flutter/roomplan_flutter.dart';
 import 'package:vector_math/vector_math_64.dart';
 
-import 'position.dart';
-
 /// Pre-defined categories for scanned objects.
 enum ObjectCategory {
   storage,
