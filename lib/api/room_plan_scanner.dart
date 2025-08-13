@@ -55,7 +55,7 @@ class RoomPlanScanner {
   /// Returns a [ScanResult] upon completion, or null if the scan
   /// is cancelled or fails.
   Future<ScanResult?> startScanning({ScanConfiguration? configuration}) async {
-    final result = await _channel.startRoomCapture();
+    final result = await _channel.startRoomCapture(configuration: configuration);
     if (result is String) {
       return parseScanResult(result);
     }
