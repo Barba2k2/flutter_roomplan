@@ -3,7 +3,7 @@
 #
 Pod::Spec.new do |s|
   s.name             = 'roomplan_flutter'
-  s.version          = '0.0.8'
+  s.version          = '0.1.1'
   s.summary          = 'A Flutter plugin to use Apple\'s RoomPlan API.'
   s.description      = <<-DESC
 A Flutter plugin for iOS that provides access to Apple's RoomPlan API, allowing you to easily scan an interior room and receive a 3D model with detailed measurements.
