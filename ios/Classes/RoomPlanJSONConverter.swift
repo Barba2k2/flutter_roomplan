@@ -54,9 +54,109 @@ struct SerializableRoom: Encodable {
   private static func findFloorAndCeiling(room: CapturedRoom) -> (
     SerializableSurface?, SerializableSurface?
   ) {
-    // Temporarily return nil for both floor and ceiling to resolve compilation issues
-    // TODO: Implement proper floor and ceiling detection once compilation issues are resolved
-    return (nil, nil)
+    // Derive floor and ceiling from wall geometry by projecting to XZ and using Y extents
+    let walls = room.walls
+    guard !walls.isEmpty else { return (nil, nil) }
+
+    var minFloorY: Float = .greatestFiniteMagnitude
+    var maxCeilingY: Float = -.greatestFiniteMagnitude
+
+    var minX: Float = .greatestFiniteMagnitude
+    var maxX: Float = -.greatestFiniteMagnitude
+    var minZ: Float = .greatestFiniteMagnitude
+    var maxZ: Float = -.greatestFiniteMagnitude
+
+    var confidences: [CapturedRoom.Confidence] = []
+
+    for wall in walls {
+      let t = wall.transform
+      let translation = simd_float3(t.columns.3.x, t.columns.3.y, t.columns.3.z)
+      let wallHeight = wall.dimensions.y
+
+      // Update floor and ceiling Y using wall bottom/top
+      let bottomY = translation.y - (wallHeight / 2.0)
+      let topY = translation.y + (wallHeight / 2.0)
+      if bottomY < minFloorY { minFloorY = bottomY }
+      if topY > maxCeilingY { maxCeilingY = topY }
+
+      // Estimate room XZ extents using wall endpoints along local X axis
+      let localXAxis = simd_normalize(simd_float3(t.columns.0.x, t.columns.0.y, t.columns.0.z))
+      let halfLength = wall.dimensions.x / 2.0
+      let p1 = translation + (localXAxis * halfLength)
+      let p2 = translation - (localXAxis * halfLength)
+
+      // Project to XZ plane
+      minX = Swift.min(minX, p1.x)
+      minX = Swift.min(minX, p2.x)
+      maxX = Swift.max(maxX, p1.x)
+      maxX = Swift.max(maxX, p2.x)
+
+      minZ = Swift.min(minZ, p1.z)
+      minZ = Swift.min(minZ, p2.z)
+      maxZ = Swift.max(maxZ, p1.z)
+      maxZ = Swift.max(maxZ, p2.z)
+
+      confidences.append(wall.confidence)
+    }
+
+    // Compute planar dimensions (length along X, width along Z)
+    let length = max(0.0, maxX - minX)
+    let width = max(0.0, maxZ - minZ)
+
+    // Guard against degenerate rooms
+    if !length.isFinite || !width.isFinite || length == 0 || width == 0 {
+      return (nil, nil)
+    }
+
+    // Build transforms centered in XZ bounds at floor/ceiling heights
+    let centerX = (minX + maxX) / 2.0
+    let centerZ = (minZ + maxZ) / 2.0
+
+    var floorTransform = matrix_identity_float4x4
+    floorTransform.columns.3 = simd_float4(centerX, minFloorY, centerZ, 1.0)
+
+    var ceilingTransform = matrix_identity_float4x4
+    ceilingTransform.columns.3 = simd_float4(centerX, maxCeilingY, centerZ, 1.0)
+
+    // Determine conservative confidence (minimum across walls)
+    func confidenceString(from list: [CapturedRoom.Confidence]) -> String {
+      guard !list.isEmpty else { return CapturedRoom.Confidence.medium.description }
+      var minLevel = 2
+      for c in list {
+        let level: Int
+        switch c {
+        case .high: level = 2
+        case .medium: level = 1
+        case .low: level = 0
+        @unknown default: level = 0
+        }
+        minLevel = Swift.min(minLevel, level)
+      }
+      switch minLevel {
+      case 2: return CapturedRoom.Confidence.high.description
+      case 1: return CapturedRoom.Confidence.medium.description
+      default: return CapturedRoom.Confidence.low.description
+      }
+    }
+
+    let conf = confidenceString(from: confidences)
+
+    // Construct serializable surfaces for floor and ceiling
+    let floorSurface = SerializableSurface(
+      category: "floor",
+      dimensions: simd_float3(length, width, 0.0),
+      transform: floorTransform,
+      confidence: conf
+    )
+
+    let ceilingSurface = SerializableSurface(
+      category: "ceiling",
+      dimensions: simd_float3(length, width, 0.0),
+      transform: ceilingTransform,
+      confidence: conf
+    )
+
+    return (floorSurface, ceilingSurface)
   }
 }
 
@@ -74,6 +174,21 @@ struct SerializableSurface: Encodable {
     self.dimensions = SerializableVector(from: surface.dimensions)
     self.transform = surface.transform.toFloatArray()
     self.confidence = surface.confidence.description
+  }
+
+  /// Convenience initializer to create synthetic surfaces (e.g., floor/ceiling)
+  init(
+    uuid: UUID = UUID(),
+    category: String,
+    dimensions: simd_float3,
+    transform: simd_float4x4,
+    confidence: String
+  ) {
+    self.uuid = uuid
+    self.category = category
+    self.dimensions = SerializableVector(from: dimensions)
+    self.transform = transform.toFloatArray()
+    self.confidence = confidence
   }
 }
 
