@@ -59,10 +59,10 @@ class _ScannerWidgetState extends State<ScannerWidget> {
     setState(() {
       _isSupported = supported;
     });
-    
+
     if (supported) {
       _roomScanner = RoomPlanScanner();
-      
+
       // Listen to real-time updates
       _scanSubscription = _roomScanner.onScanResult.listen((result) {
         if (result != null) {
@@ -88,9 +88,9 @@ class _ScannerWidgetState extends State<ScannerWidget> {
 
   Future<void> _startScan() async {
     if (!_isSupported) return;
-    
+
     setState(() => _isScanning = true);
-    
+
     try {
       final result = await _roomScanner.startScanning();
       if (result != null) {
@@ -183,7 +183,7 @@ final result = await _roomScanner.startScanning(configuration: config);
 
 The package supports both metric and imperial measurement units:
 
-```dart
+````dart
 // Switch between measurement units
 MeasurementUnit selectedUnit = MeasurementUnit.metric; // or MeasurementUnit.imperial
 
@@ -196,10 +196,38 @@ if (result.room.dimensions != null) {
   print('Volume: ${dims.getFormattedVolume(selectedUnit)}');     // "60.00m³" or "2118.88cu ft"
 }
 
+### Floor and Ceiling Measurements
+
+The plugin derives complete floor and ceiling surfaces from the scan:
+
+```dart
+final result = await _roomScanner.startScanning();
+if (result?.room.floor != null) {
+  final floor = result!.room.floor!;
+  print('Floor area: ${floor.dimensions?.getFormattedFloorArea(MeasurementUnit.metric)}');
+  print('Floor size: ${floor.dimensions?.getFormattedLength(MeasurementUnit.metric)} x '
+        '${floor.dimensions?.getFormattedWidth(MeasurementUnit.metric)}');
+  print('Floor confidence: ${floor.confidence}');
+}
+if (result?.room.ceiling != null) {
+  final ceiling = result!.room.ceiling!;
+  print('Ceiling area: ${ceiling.dimensions?.getFormattedFloorArea(MeasurementUnit.metric)}');
+  print('Ceiling size: ${ceiling.dimensions?.getFormattedLength(MeasurementUnit.metric)} x '
+        '${ceiling.dimensions?.getFormattedWidth(MeasurementUnit.metric)}');
+  print('Ceiling confidence: ${ceiling.confidence}');
+}
+````
+
+Notes:
+
+- Floor and ceiling dimensions are length × width; room height is available via `room.dimensions.height`.
+- Confidence is a conservative aggregation from detected walls.
+
 // Access raw imperial values directly
 final lengthInFeet = result.room.dimensions!.lengthInFeet;
 final areaInSqFeet = result.room.dimensions!.floorAreaInSqFeet;
-```
+
+````
 
 ### Performance Monitoring
 
@@ -217,7 +245,7 @@ print('Average JSON parse time: ${stats['operation_averages']['json_parse_total'
 
 // Clear performance data
 PerformanceMonitor.clearStats();
-```
+````
 
 ### Error Handling
 
@@ -236,18 +264,21 @@ See the `example` app for a more detailed implementation.
 ## Performance Features
 
 ### Memory Optimization
+
 - **Object Pooling**: Reuses Matrix4 and Vector3 objects to reduce garbage collection
 - **Stream Caching**: Cached broadcast streams prevent repeated creation
 - **Automatic Cleanup**: Timer-based maintenance frees unused resources
 - **Memory Monitoring**: Automatic detection and handling of memory pressure
 
-### Processing Optimization  
+### Processing Optimization
+
 - **3x Faster JSON Parsing**: Optimized algorithms and caching
-- **Single-Pass Calculations**: Reduced complexity from O(n²) to O(n) 
+- **Single-Pass Calculations**: Reduced complexity from O(n²) to O(n)
 - **Lazy Evaluation**: Only compute values when needed
 - **Pre-computed Lookups**: Enum conversions use lookup tables
 
 ### UI Responsiveness
+
 - **Throttled Updates**: Statistics updated on 500ms timer instead of every frame
 - **Reduced Rebuilds**: Minimal setState() calls during real-time scanning
 - **Consistent 60fps**: Maintained throughout scanning sessions
@@ -310,22 +341,26 @@ Refer to the source code for detailed information on all fields.
 ### Common Issues
 
 **"RoomPlan is not supported"**
+
 - Ensure your device has iOS 16.0 or later
 - Verify your device has a LiDAR sensor (iPhone 12 Pro+, iPad Pro with LiDAR)
 - Check that your app's deployment target is set to iOS 16.0+
 
 **Camera permission denied**
+
 - Add `NSCameraUsageDescription` to your `Info.plist`
 - The user must grant camera permission when prompted
 - Users can change permissions in Settings > Privacy & Security > Camera
 
 **Scanning accuracy issues**
+
 - Ensure good lighting conditions
 - Move slowly and steadily during scanning
 - Keep the camera pointed at walls and objects
 - Avoid reflective surfaces and windows when possible
 
 **Memory issues or crashes**
+
 - Always call `dispose()` on the scanner when done
 - Cancel stream subscriptions in your widget's `dispose()` method
 - Avoid creating multiple scanner instances simultaneously
@@ -343,14 +378,17 @@ Refer to the source code for detailed information on all fields.
 ### RoomPlanScanner
 
 #### Static Methods
+
 - `static Future<bool> isSupported()` - Check if RoomPlan is available on the current device
 
 #### Instance Methods
+
 - `Future<ScanResult?> startScanning({ScanConfiguration? configuration})` - Begin a room scanning session with optional configuration
 - `Future<void> stopScanning()` - Stop the current scanning session
 - `void dispose()` - Clean up resources
 
 #### Properties
+
 - `Stream<ScanResult?> onScanResult` - Stream of real-time scan updates
 
 ### ScanConfiguration
@@ -359,10 +397,11 @@ Refer to the source code for detailed information on all fields.
 - `timeoutSeconds`: Optional timeout in seconds
 - `enableRealtimeUpdates`: Enable real-time scan updates
 - `detectFurniture`: Include furniture in scan results
-- `detectDoors`: Include doors in scan results  
+- `detectDoors`: Include doors in scan results
 - `detectWindows`: Include windows in scan results
 
 #### Preset Configurations
+
 - `ScanConfiguration.fast()`: Quick scanning with basic features
 - `ScanConfiguration.accurate()`: High-quality scanning with all features
 - `ScanConfiguration.minimal()`: Minimal scanning for testing
@@ -373,6 +412,7 @@ Refer to the source code for detailed information on all fields.
 - `MeasurementUnit.imperial`: Feet, square feet, cubic feet
 
 #### Unit Conversion
+
 - `UnitConverter.metersToFeetConversion()`: Convert meters to feet
 - `UnitConverter.sqMetersToSqFeetConversion()`: Convert square meters to square feet
 - `UnitConverter.formatLength()`: Format length with units
@@ -381,17 +421,20 @@ Refer to the source code for detailed information on all fields.
 ### Exceptions
 
 #### Permission & Access
+
 - `RoomPlanPermissionsException` - Camera permission denied
 - `CameraPermissionNotDeterminedException` - Permission not yet requested
 - `CameraPermissionUnknownException` - Unknown permission state
 
 #### Device & Platform
+
 - `RoomPlanNotAvailableException` - RoomPlan not supported
 - `UnsupportedVersionException` - iOS version too old
 - `ARKitNotSupportedException` - ARKit not available
 - `InsufficientHardwareException` - Device lacks required hardware
 
 #### Scanning Process
+
 - `ScanCancelledException` - User cancelled the scan
 - `SessionInProgressException` - Scan already in progress
 - `SessionNotRunningException` - No active scan session
@@ -400,6 +443,7 @@ Refer to the source code for detailed information on all fields.
 - `ProcessingFailedException` - Data processing failed
 
 #### System Resources
+
 - `LowPowerModeException` - Device in low power mode
 - `InsufficientStorageException` - Not enough storage space
 - `MemoryPressureException` - System memory pressure
@@ -407,6 +451,7 @@ Refer to the source code for detailed information on all fields.
 - `BackgroundModeActiveException` - App backgrounded during scan
 
 #### Data & Network
+
 - `TimeoutException` - Operation timed out
 - `DataCorruptedException` - Scan data corrupted
 - `ExportFailedException` - Failed to export scan data
@@ -418,14 +463,16 @@ Refer to the source code for detailed information on all fields.
 ## Device Requirements for Testing
 
 ### Supported Devices
+
 To properly test the Flutter RoomPlan package, you need a device with:
 
 - **iOS 16.0 or later**
 - **LiDAR sensor**
 
 #### Compatible Devices:
+
 - iPhone 12 Pro / Pro Max
-- iPhone 13 Pro / Pro Max  
+- iPhone 13 Pro / Pro Max
 - iPhone 14 Pro / Pro Max
 - iPhone 15 Pro / Pro Max
 - iPhone 16 Pro / Pro Max
@@ -433,7 +480,9 @@ To properly test the Flutter RoomPlan package, you need a device with:
 - iPad Pro 12.9-inch (5th generation and later)
 
 ### Non-Compatible Devices
+
 These devices will return `isSupported() = false`:
+
 - iPhone 12 / 12 Mini
 - iPhone 13 / 13 Mini
 - iPhone 14 / 14 Plus
@@ -444,12 +493,15 @@ These devices will return `isSupported() = false`:
 ## Testing Checklist
 
 ### 1. Unit Tests
+
 Run automated tests on any development machine:
+
 ```bash
 flutter test
 ```
 
 Expected results:
+
 - ✅ All RoomPlanScanner method tests pass
 - ✅ All model validation tests pass
 - ✅ All exception handling tests pass
@@ -458,12 +510,14 @@ Expected results:
 ### 2. Device Compatibility Testing
 
 #### On Compatible Device:
+
 ```dart
 final isSupported = await RoomPlanScanner.isSupported();
 // Should return: true
 ```
 
 #### On Incompatible Device:
+
 ```dart
 final isSupported = await RoomPlanScanner.isSupported();
 // Should return: false
@@ -472,6 +526,7 @@ final isSupported = await RoomPlanScanner.isSupported();
 ### 3. Permission Testing
 
 #### Test Camera Permission Flow:
+
 1. First run - should prompt for camera permission
 2. Grant permission - scanning should work
 3. Deny permission - should throw `RoomPlanPermissionsException`
@@ -480,6 +535,7 @@ final isSupported = await RoomPlanScanner.isSupported();
 ### 4. Scanning Functionality Tests
 
 #### Basic Scanning Test:
+
 ```dart
 final scanner = RoomPlanScanner();
 try {
@@ -496,6 +552,7 @@ try {
 ```
 
 #### Real-time Updates Test:
+
 ```dart
 final scanner = RoomPlanScanner();
 scanner.onScanResult.listen((result) {
@@ -506,6 +563,7 @@ scanner.onScanResult.listen((result) {
 ```
 
 #### Stop Scanning Test:
+
 ```dart
 final scanner = RoomPlanScanner();
 // Start scanning in background
@@ -519,6 +577,7 @@ await scanner.stopScanning();
 ### 5. Error Scenario Testing
 
 #### Test Different Error Conditions:
+
 - Camera permission denied
 - User cancels scan
 - Device orientation changes during scan
@@ -529,11 +588,13 @@ await scanner.stopScanning();
 ### 6. Performance Testing
 
 #### Memory Usage:
+
 - Monitor memory usage during long scans
 - Test multiple scan sessions
 - Verify proper resource cleanup with `dispose()`
 
 #### Battery Usage:
+
 - Monitor battery drain during scanning
 - Test with screen brightness settings
 - Compare performance in different room sizes
@@ -541,6 +602,7 @@ await scanner.stopScanning();
 ### 7. Room Scenarios Testing
 
 #### Test Different Room Types:
+
 - **Small rooms** (< 3x3 meters)
 - **Large rooms** (> 6x6 meters)
 - **Complex layouts** (L-shaped, multiple doorways)
@@ -548,6 +610,7 @@ await scanner.stopScanning();
 - **Different lighting conditions**
 
 #### Environmental Challenges:
+
 - **Reflective surfaces** (mirrors, glass)
 - **Dark rooms** (poor lighting)
 - **Cluttered spaces**
@@ -556,6 +619,7 @@ await scanner.stopScanning();
 ## Test Results Documentation
 
 ### Create Test Report:
+
 Document your testing with:
 
 ```markdown
@@ -565,11 +629,13 @@ Document your testing with:
 **Date**: [Current Date]
 
 ### Compatibility Tests
+
 - ✅ isSupported() returns true
 - ✅ Camera permission prompt appears
 - ✅ Scan initializes successfully
 
-### Functionality Tests  
+### Functionality Tests
+
 - ✅ Basic room scan completes
 - ✅ Real-time updates received
 - ✅ Stop scanning works correctly
@@ -580,19 +646,23 @@ Document your testing with:
 - ✅ Windows detected: 2
 
 ### Error Handling Tests
+
 - ✅ Permission denied handled correctly
 - ✅ User cancellation handled correctly
 - ✅ Background/foreground transitions work
 
 ### Performance Tests
+
 - Memory usage: ~150MB during scan
 - Battery usage: ~8%/hour during active scanning
 - Scan completion time: 45 seconds average
 
 ### Issues Found
+
 - None / [List any issues discovered]
 
 ### Recommendations
+
 - [Any recommendations for improvements]
 ```
 
@@ -607,6 +677,7 @@ Document your testing with:
 ## Reporting Issues
 
 When reporting issues, please include:
+
 - Device model and iOS version
 - Flutter/Dart version
 - Room size and characteristics
