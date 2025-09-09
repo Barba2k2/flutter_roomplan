@@ -1,3 +1,11 @@
+## 0.1.2
+
+- **Feature(iOS)**: Added floor and ceiling detection. Derives horizontal extents from walls, computes floor (min Y) and ceiling (max Y), and emits `floor`/`ceiling` surfaces with full dimensions and transforms.
+- **Enhancement(iOS)**: Added `SerializableSurface` convenience initializer to construct synthetic surfaces (used for floor/ceiling).
+- **Feature(example)**: Room details show floor/ceiling length, width, area, and confidence. Added `floor_ceiling_details_view.dart`. Advanced scanning page displays real-time floor/ceiling area.
+- **Documentation**: Updated README with floor/ceiling usage examples and notes.
+- **Testing**: Added `test/floor_ceiling_test.dart` covering presence/absence scenarios and area calculation.
+
 ## 0.1.1
 
 - **Documentation**: Comprehensive README update with new features, performance details, and expanded API reference.
