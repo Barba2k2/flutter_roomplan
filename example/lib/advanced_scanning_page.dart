@@ -14,13 +14,13 @@ class _AdvancedScanningPageState extends State<AdvancedScanningPage> {
   late final RoomPlanScanner _scanner;
   StreamSubscription<ScanResult?>? _scanSubscription;
   Timer? _statisticsUpdateTimer;
-  
+
   bool _isSupported = false;
   bool _isScanning = false;
   ScanResult? _currentResult;
   String _statusMessage = 'Checking compatibility...';
   ScanConfiguration _selectedConfig = const ScanConfiguration();
-  
+
   // Scanning statistics
   int _wallsDetected = 0;
   int _objectsDetected = 0;
@@ -28,10 +28,10 @@ class _AdvancedScanningPageState extends State<AdvancedScanningPage> {
   int _windowsDetected = 0;
   DateTime? _scanStartTime;
   String _scanDuration = '00:00';
-  
+
   // Unit system preference
   MeasurementUnit _selectedUnit = MeasurementUnit.metric;
-  
+
   Timer? _durationTimer;
 
   @override
@@ -57,11 +57,11 @@ class _AdvancedScanningPageState extends State<AdvancedScanningPage> {
       final supported = await RoomPlanScanner.isSupported();
       setState(() {
         _isSupported = supported;
-        _statusMessage = supported 
-            ? 'Device is compatible with RoomPlan' 
+        _statusMessage = supported
+            ? 'Device is compatible with RoomPlan'
             : 'Device is not compatible with RoomPlan';
       });
-      
+
       if (supported) {
         _initializeScanner();
       }
@@ -74,16 +74,17 @@ class _AdvancedScanningPageState extends State<AdvancedScanningPage> {
 
   void _initializeScanner() {
     _scanner = RoomPlanScanner();
-    
+
     // Performance optimization: Throttle UI updates to prevent excessive rebuilds
     _scanSubscription = _scanner.onScanResult
         .where((result) => result != null)
         .listen((result) {
-          _updateStatistics(result!);
-        });
-    
+      _updateStatistics(result!);
+    });
+
     // Performance optimization: Update statistics on a timer to reduce UI rebuilds
-    _statisticsUpdateTimer = Timer.periodic(const Duration(milliseconds: 500), (_) {
+    _statisticsUpdateTimer =
+        Timer.periodic(const Duration(milliseconds: 500), (_) {
       if (_isScanning && mounted) {
         setState(() {
           // Force rebuild only when necessary
@@ -91,7 +92,7 @@ class _AdvancedScanningPageState extends State<AdvancedScanningPage> {
       }
     });
   }
-  
+
   void _updateStatistics(ScanResult result) {
     // Performance optimization: Update statistics without setState to avoid excessive rebuilds
     _currentResult = result;
@@ -103,7 +104,7 @@ class _AdvancedScanningPageState extends State<AdvancedScanningPage> {
 
   Future<void> _startScan() async {
     if (!_isSupported || _isScanning) return;
-    
+
     setState(() {
       _isScanning = true;
       _statusMessage = 'Starting scan...';
@@ -113,12 +114,13 @@ class _AdvancedScanningPageState extends State<AdvancedScanningPage> {
       _doorsDetected = 0;
       _windowsDetected = 0;
     });
-    
+
     _startDurationTimer();
-    
+
     try {
-      final result = await _scanner.startScanning(configuration: _selectedConfig);
-      
+      final result =
+          await _scanner.startScanning(configuration: _selectedConfig);
+
       setState(() {
         _isScanning = false;
         if (result != null) {
@@ -144,7 +146,7 @@ class _AdvancedScanningPageState extends State<AdvancedScanningPage> {
 
   Future<void> _stopScan() async {
     if (!_isScanning) return;
-    
+
     try {
       await _scanner.stopScanning();
       setState(() {
@@ -166,7 +168,7 @@ class _AdvancedScanningPageState extends State<AdvancedScanningPage> {
         final duration = DateTime.now().difference(_scanStartTime!);
         setState(() {
           _scanDuration = '${duration.inMinutes.toString().padLeft(2, '0')}:'
-                        '${(duration.inSeconds % 60).toString().padLeft(2, '0')}';
+              '${(duration.inSeconds % 60).toString().padLeft(2, '0')}';
         });
       }
     });
@@ -211,19 +213,23 @@ class _AdvancedScanningPageState extends State<AdvancedScanningPage> {
           // Unit toggle button
           if (_isSupported)
             IconButton(
-              icon: Icon(_selectedUnit == MeasurementUnit.metric ? Icons.straighten : Icons.architecture),
-              tooltip: 'Switch to ${_selectedUnit == MeasurementUnit.metric ? 'Imperial' : 'Metric'} units',
+              icon: Icon(_selectedUnit == MeasurementUnit.metric
+                  ? Icons.straighten
+                  : Icons.architecture),
+              tooltip:
+                  'Switch to ${_selectedUnit == MeasurementUnit.metric ? 'Imperial' : 'Metric'} units',
               onPressed: () {
                 setState(() {
-                  _selectedUnit = _selectedUnit == MeasurementUnit.metric 
-                      ? MeasurementUnit.imperial 
+                  _selectedUnit = _selectedUnit == MeasurementUnit.metric
+                      ? MeasurementUnit.imperial
                       : MeasurementUnit.metric;
                 });
               },
             ),
           IconButton(
             icon: const Icon(Icons.settings),
-            onPressed: _isSupported && !_isScanning ? _showConfigurationDialog : null,
+            onPressed:
+                _isSupported && !_isScanning ? _showConfigurationDialog : null,
           ),
         ],
       ),
@@ -263,7 +269,7 @@ class _AdvancedScanningPageState extends State<AdvancedScanningPage> {
                 ),
               ),
             ),
-            
+
             // Statistics Card
             if (_isSupported) ...[
               const SizedBox(height: 16),
@@ -303,11 +309,33 @@ class _AdvancedScanningPageState extends State<AdvancedScanningPage> {
                           ),
                         ],
                       ),
+                      const SizedBox(height: 12),
+                      if (_currentResult?.room.floor != null ||
+                          _currentResult?.room.ceiling != null)
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Floor/Ceiling',
+                              style: Theme.of(context).textTheme.titleSmall,
+                            ),
+                            if (_currentResult?.room.floor != null)
+                              Text(
+                                'Floor area: '
+                                '${_currentResult!.room.floor!.dimensions?.getFormattedFloorArea(_selectedUnit) ?? '—'}',
+                              ),
+                            if (_currentResult?.room.ceiling != null)
+                              Text(
+                                'Ceiling area: '
+                                '${_currentResult!.room.ceiling!.dimensions?.getFormattedFloorArea(_selectedUnit) ?? '—'}',
+                              ),
+                          ],
+                        ),
                     ],
                   ),
                 ),
               ),
-              
+
               // Configuration Card
               const SizedBox(height: 16),
               Card(
@@ -321,19 +349,23 @@ class _AdvancedScanningPageState extends State<AdvancedScanningPage> {
                         style: Theme.of(context).textTheme.titleMedium,
                       ),
                       const SizedBox(height: 8),
-                      Text('Units: ${_selectedUnit.displayName} (${_selectedUnit.lengthUnit}, ${_selectedUnit.areaUnit})'),
+                      Text(
+                          'Units: ${_selectedUnit.displayName} (${_selectedUnit.lengthUnit}, ${_selectedUnit.areaUnit})'),
                       Text('Quality: ${_selectedConfig.quality.name}'),
-                      Text('Timeout: ${_selectedConfig.timeoutSeconds ?? 'None'} seconds'),
-                      Text('Real-time updates: ${_selectedConfig.enableRealtimeUpdates ? 'Enabled' : 'Disabled'}'),
-                      Text('Detect furniture: ${_selectedConfig.detectFurniture ? 'Yes' : 'No'}'),
+                      Text(
+                          'Timeout: ${_selectedConfig.timeoutSeconds ?? 'None'} seconds'),
+                      Text(
+                          'Real-time updates: ${_selectedConfig.enableRealtimeUpdates ? 'Enabled' : 'Disabled'}'),
+                      Text(
+                          'Detect furniture: ${_selectedConfig.detectFurniture ? 'Yes' : 'No'}'),
                     ],
                   ),
                 ),
               ),
             ],
-            
+
             const Spacer(),
-            
+
             // Action Buttons
             if (_isSupported) ...[
               if (_isScanning)
@@ -352,9 +384,7 @@ class _AdvancedScanningPageState extends State<AdvancedScanningPage> {
                   icon: const Icon(Icons.camera_alt),
                   label: const Text('Start Room Scan'),
                 ),
-              
               const SizedBox(height: 8),
-              
               if (_currentResult != null)
                 OutlinedButton.icon(
                   onPressed: () => _showResultsDialog(_currentResult!),
@@ -393,25 +423,31 @@ class _AdvancedScanningPageState extends State<AdvancedScanningPage> {
             children: [
               Text('Room Dimensions (${_selectedUnit.displayName}):'),
               if (result.room.dimensions != null) ...[
-                Text('  Length: ${result.room.dimensions!.getFormattedLength(_selectedUnit)}'),
-                Text('  Width: ${result.room.dimensions!.getFormattedWidth(_selectedUnit)}'),
-                Text('  Height: ${result.room.dimensions!.getFormattedHeight(_selectedUnit)}'),
-                Text('  Floor Area: ${result.room.dimensions!.getFormattedFloorArea(_selectedUnit)}'),
-                Text('  Volume: ${result.room.dimensions!.getFormattedVolume(_selectedUnit)}'),
+                Text(
+                    '  Length: ${result.room.dimensions!.getFormattedLength(_selectedUnit)}'),
+                Text(
+                    '  Width: ${result.room.dimensions!.getFormattedWidth(_selectedUnit)}'),
+                Text(
+                    '  Height: ${result.room.dimensions!.getFormattedHeight(_selectedUnit)}'),
+                Text(
+                    '  Floor Area: ${result.room.dimensions!.getFormattedFloorArea(_selectedUnit)}'),
+                Text(
+                    '  Volume: ${result.room.dimensions!.getFormattedVolume(_selectedUnit)}'),
               ] else
                 Text('  Not available'),
-              
               const SizedBox(height: 16),
               Text('Scan Metadata:'),
               Text('  Duration: ${result.metadata.scanDuration.inSeconds}s'),
               Text('  Device: ${result.metadata.deviceModel}'),
               Text('  Has LiDAR: ${result.metadata.hasLidar ? 'Yes' : 'No'}'),
-              
               const SizedBox(height: 16),
               Text('Confidence Scores:'),
-              Text('  Overall: ${(result.confidence.overall * 100).toStringAsFixed(1)}%'),
-              Text('  Wall Accuracy: ${(result.confidence.wallAccuracy * 100).toStringAsFixed(1)}%'),
-              Text('  Dimension Accuracy: ${(result.confidence.dimensionAccuracy * 100).toStringAsFixed(1)}%'),
+              Text(
+                  '  Overall: ${(result.confidence.overall * 100).toStringAsFixed(1)}%'),
+              Text(
+                  '  Wall Accuracy: ${(result.confidence.wallAccuracy * 100).toStringAsFixed(1)}%'),
+              Text(
+                  '  Dimension Accuracy: ${(result.confidence.dimensionAccuracy * 100).toStringAsFixed(1)}%'),
             ],
           ),
         ),
@@ -446,8 +482,8 @@ class _StatisticItem extends StatelessWidget {
         Text(
           count.toString(),
           style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-            fontWeight: FontWeight.bold,
-          ),
+                fontWeight: FontWeight.bold,
+              ),
         ),
         Text(
           label,
@@ -495,26 +531,28 @@ class _ConfigurationDialogState extends State<_ConfigurationDialog> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Quality Level', style: Theme.of(context).textTheme.titleSmall),
+                    Text('Quality Level',
+                        style: Theme.of(context).textTheme.titleSmall),
                     const SizedBox(height: 8),
-                    ...ScanQuality.values.map((quality) => RadioListTile<ScanQuality>(
-                      title: Text(quality.name),
-                      subtitle: Text(quality.description),
-                      value: quality,
-                      groupValue: _config.quality,
-                      onChanged: (value) {
-                        setState(() {
-                          _config = _config.copyWith(quality: value);
-                        });
-                      },
-                    )),
+                    ...ScanQuality.values
+                        .map((quality) => RadioListTile<ScanQuality>(
+                              title: Text(quality.name),
+                              subtitle: Text(quality.description),
+                              value: quality,
+                              groupValue: _config.quality,
+                              onChanged: (value) {
+                                setState(() {
+                                  _config = _config.copyWith(quality: value);
+                                });
+                              },
+                            )),
                   ],
                 ),
               ),
             ),
-            
+
             const SizedBox(height: 16),
-            
+
             // Feature Toggles
             Card(
               child: Padding(
@@ -522,7 +560,8 @@ class _ConfigurationDialogState extends State<_ConfigurationDialog> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Detection Features', style: Theme.of(context).textTheme.titleSmall),
+                    Text('Detection Features',
+                        style: Theme.of(context).textTheme.titleSmall),
                     const SizedBox(height: 8),
                     SwitchListTile(
                       title: const Text('Real-time Updates'),
@@ -530,7 +569,8 @@ class _ConfigurationDialogState extends State<_ConfigurationDialog> {
                       value: _config.enableRealtimeUpdates,
                       onChanged: (value) {
                         setState(() {
-                          _config = _config.copyWith(enableRealtimeUpdates: value);
+                          _config =
+                              _config.copyWith(enableRealtimeUpdates: value);
                         });
                       },
                     ),
@@ -568,10 +608,11 @@ class _ConfigurationDialogState extends State<_ConfigurationDialog> {
                 ),
               ),
             ),
-            
+
             // Preset Buttons
             const SizedBox(height: 16),
-            Text('Quick Presets', style: Theme.of(context).textTheme.titleSmall),
+            Text('Quick Presets',
+                style: Theme.of(context).textTheme.titleSmall),
             const SizedBox(height: 8),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
