@@ -11,6 +11,8 @@ class RoomDetailsView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final dimensions = scanResult.room.dimensions;
+    final floor = scanResult.room.floor;
+    final ceiling = scanResult.room.ceiling;
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
@@ -29,6 +31,60 @@ class RoomDetailsView extends StatelessWidget {
               DetailRow(
                 title: 'Height',
                 value: '${dimensions.height.toStringAsFixed(2)} m',
+              ),
+            ],
+          ),
+        if (floor != null)
+          MeasurementCard(
+            title: 'Floor',
+            details: [
+              if (floor.dimensions != null) ...[
+                DetailRow(
+                  title: 'Length',
+                  value: floor.dimensions!
+                      .getFormattedLength(MeasurementUnit.metric),
+                ),
+                DetailRow(
+                  title: 'Width',
+                  value: floor.dimensions!
+                      .getFormattedWidth(MeasurementUnit.metric),
+                ),
+                DetailRow(
+                  title: 'Area',
+                  value: floor.dimensions!
+                      .getFormattedFloorArea(MeasurementUnit.metric),
+                ),
+              ],
+              DetailRow(
+                title: 'Confidence',
+                value: floor.confidence.toString().split('.').last,
+              ),
+            ],
+          ),
+        if (ceiling != null)
+          MeasurementCard(
+            title: 'Ceiling',
+            details: [
+              if (ceiling.dimensions != null) ...[
+                DetailRow(
+                  title: 'Length',
+                  value: ceiling.dimensions!
+                      .getFormattedLength(MeasurementUnit.metric),
+                ),
+                DetailRow(
+                  title: 'Width',
+                  value: ceiling.dimensions!
+                      .getFormattedWidth(MeasurementUnit.metric),
+                ),
+                DetailRow(
+                  title: 'Area',
+                  value: ceiling.dimensions!
+                      .getFormattedFloorArea(MeasurementUnit.metric),
+                ),
+              ],
+              DetailRow(
+                title: 'Confidence',
+                value: ceiling.confidence.toString().split('.').last,
               ),
             ],
           ),
