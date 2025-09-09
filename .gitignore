@@ -44,3 +44,7 @@ build/
 .claude/
 CLAUDE.md
 .cursor/
+
+# Documentation files to ignore
+ADVANCED_POSITION_FEATURES.md
+FLOOR_CEILING_IMPLEMENTATION_PLAN.md
