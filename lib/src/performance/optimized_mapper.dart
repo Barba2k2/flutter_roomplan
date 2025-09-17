@@ -9,7 +9,7 @@ import 'performance_monitor.dart';
 class OptimizedMapper {
   // Performance optimization: Cache for repeated category calculations
   static final Map<String, ObjectCategory> _categoryCache = {};
-  
+
   // Performance optimization: Pre-compiled confidence mapping
   static const Map<String, double> _confidenceMap = {
     'low': 0.33,
@@ -20,13 +20,13 @@ class OptimizedMapper {
   /// Parse scan result with performance optimizations
   static ScanResult? parseScanResult(String? jsonResult) {
     if (jsonResult == null) return null;
-    
+
     return PerformanceMonitor.timeOperation('json_parse_total', () {
       try {
         final data = PerformanceMonitor.timeOperation('json_decode', () {
           return json.decode(jsonResult) as Map<String, dynamic>;
         });
-        
+
         return PerformanceMonitor.timeOperation('scan_result_conversion', () {
           return _toScanResultOptimized(data);
         });
@@ -46,9 +46,9 @@ class OptimizedMapper {
     // Performance optimization: Reduce map lookups with local variables
     final roomData = data['room'] as Map<String, dynamic>? ?? data;
     final metadataData = data['metadata'] as Map<String, dynamic>?;
-    final confidenceData = data['confidence'] as Map<String, dynamic>? ?? 
-                          roomData['confidence'] as Map<String, dynamic>?;
-    
+    final confidenceData = data['confidence'] as Map<String, dynamic>? ??
+        roomData['confidence'] as Map<String, dynamic>?;
+
     return ScanResult(
       room: _toRoomDataOptimized(roomData),
       metadata: _toScanMetadataOptimized(metadataData),
@@ -63,16 +63,40 @@ class OptimizedMapper {
     final doorsData = data['doors'] as List?;
     final windowsData = data['windows'] as List?;
     final openingsData = data['openings'] as List?;
-    
-    final walls = wallsData?.map((w) => _toWallDataOptimized(w as Map<String, dynamic>)).toList() ?? <WallData>[];
-    final objects = objectsData?.map((o) => _toObjectDataOptimized(o as Map<String, dynamic>)).toList() ?? <ObjectData>[];
-    final doors = doorsData?.map((d) => _toOpeningDataOptimized(d as Map<String, dynamic>, OpeningType.door)).toList() ?? <OpeningData>[];
-    final windows = windowsData?.map((w) => _toOpeningDataOptimized(w as Map<String, dynamic>, OpeningType.window)).toList() ?? <OpeningData>[];
-    final openings = openingsData?.map((o) => _toOpeningDataOptimized(o as Map<String, dynamic>, OpeningType.opening)).toList() ?? <OpeningData>[];
 
-    final floor = data['floor'] != null ? _toWallDataOptimized(data['floor'] as Map<String, dynamic>) : null;
-    final ceiling = data['ceiling'] != null ? _toWallDataOptimized(data['ceiling'] as Map<String, dynamic>) : null;
-    final dimensions = _toRoomDimensionsOptimized(data['dimensions'] as Map<String, dynamic>?) ?? floor?.dimensions;
+    final walls = wallsData
+            ?.map((w) => _toWallDataOptimized(w as Map<String, dynamic>))
+            .toList() ??
+        <WallData>[];
+    final objects = objectsData
+            ?.map((o) => _toObjectDataOptimized(o as Map<String, dynamic>))
+            .toList() ??
+        <ObjectData>[];
+    final doors = doorsData
+            ?.map((d) => _toOpeningDataOptimized(
+                d as Map<String, dynamic>, OpeningType.door))
+            .toList() ??
+        <OpeningData>[];
+    final windows = windowsData
+            ?.map((w) => _toOpeningDataOptimized(
+                w as Map<String, dynamic>, OpeningType.window))
+            .toList() ??
+        <OpeningData>[];
+    final openings = openingsData
+            ?.map((o) => _toOpeningDataOptimized(
+                o as Map<String, dynamic>, OpeningType.opening))
+            .toList() ??
+        <OpeningData>[];
+
+    final floor = data['floor'] != null
+        ? _toWallDataOptimized(data['floor'] as Map<String, dynamic>)
+        : null;
+    final ceiling = data['ceiling'] != null
+        ? _toWallDataOptimized(data['ceiling'] as Map<String, dynamic>)
+        : null;
+    final dimensions = _toRoomDimensionsOptimized(
+            data['dimensions'] as Map<String, dynamic>?) ??
+        floor?.dimensions;
 
     return RoomData(
       dimensions: dimensions,
@@ -86,20 +110,22 @@ class OptimizedMapper {
     );
   }
 
-  static RoomDimensions? _toRoomDimensionsOptimized(Map<String, dynamic>? data) {
+  static RoomDimensions? _toRoomDimensionsOptimized(
+      Map<String, dynamic>? data) {
     if (data == null) return null;
-    
+
     // Performance optimization: Direct double conversion without intermediate variables
+    // Fixed mapping: x=length, y=height, z=width (matching Swift simd_float3 convention)
     return RoomDimensions(
       length: (data['x'] as num? ?? 0.0).toDouble(),
-      width: (data['y'] as num? ?? 0.0).toDouble(),
-      height: (data['z'] as num? ?? 0.0).toDouble(),
+      width: (data['z'] as num? ?? 0.0).toDouble(),
+      height: (data['y'] as num? ?? 0.0).toDouble(),
     );
   }
 
   static Matrix4? _toMatrixOptimized(List<dynamic>? data) {
     if (data == null) return null;
-    
+
     // Performance optimization: Direct Matrix4 creation from list
     final list = data.cast<num>().map((e) => e.toDouble()).toList();
     return Matrix4.fromList(list);
@@ -107,23 +133,26 @@ class OptimizedMapper {
 
   static Position _getPositionFromTransform(Matrix4? transform) {
     if (transform == null) return Position(Vector3.zero());
-    
+
     // Performance optimization: Direct translation extraction
     return Position(transform.getTranslation());
   }
 
   static WallData _toWallDataOptimized(Map<String, dynamic> data) {
-    final dimensions = _toRoomDimensionsOptimized(data['dimensions'] as Map<String, dynamic>?);
+    final dimensions =
+        _toRoomDimensionsOptimized(data['dimensions'] as Map<String, dynamic>?);
     final transform = _toMatrixOptimized(data['transform'] as List<dynamic>?);
     final position = _getPositionFromTransform(transform);
 
     // Performance optimization: Combine door and window lists efficiently
     final doorsList = data['doors'] as List? ?? <dynamic>[];
     final windowsList = data['windows'] as List? ?? <dynamic>[];
-    
+
     final openings = <OpeningData>[];
-    openings.addAll(doorsList.map((d) => _toOpeningDataOptimized(d as Map<String, dynamic>, OpeningType.door)));
-    openings.addAll(windowsList.map((w) => _toOpeningDataOptimized(w as Map<String, dynamic>, OpeningType.window)));
+    openings.addAll(doorsList.map((d) =>
+        _toOpeningDataOptimized(d as Map<String, dynamic>, OpeningType.door)));
+    openings.addAll(windowsList.map((w) => _toOpeningDataOptimized(
+        w as Map<String, dynamic>, OpeningType.window)));
 
     return WallData(
       uuid: data['uuid'] as String? ?? '',
@@ -139,10 +168,11 @@ class OptimizedMapper {
   }
 
   static ObjectData _toObjectDataOptimized(Map<String, dynamic> data) {
-    final dimensions = _toRoomDimensionsOptimized(data['dimensions'] as Map<String, dynamic>?);
+    final dimensions =
+        _toRoomDimensionsOptimized(data['dimensions'] as Map<String, dynamic>?);
     final transform = _toMatrixOptimized(data['transform'] as List<dynamic>?);
     final position = _getPositionFromTransform(transform);
-    
+
     return ObjectData(
       uuid: data['uuid'] as String? ?? '',
       category: _toObjectCategoryOptimized(data['category'] as String?),
@@ -156,8 +186,10 @@ class OptimizedMapper {
     );
   }
 
-  static OpeningData _toOpeningDataOptimized(Map<String, dynamic> data, OpeningType type) {
-    final dimensions = _toRoomDimensionsOptimized(data['dimensions'] as Map<String, dynamic>?);
+  static OpeningData _toOpeningDataOptimized(
+      Map<String, dynamic> data, OpeningType type) {
+    final dimensions =
+        _toRoomDimensionsOptimized(data['dimensions'] as Map<String, dynamic>?);
     final transform = _toMatrixOptimized(data['transform'] as List<dynamic>?);
     final position = _getPositionFromTransform(transform);
 
@@ -189,8 +221,9 @@ class OptimizedMapper {
       String value => double.tryParse(value) ?? 0.0,
       _ => 0.0,
     };
-    
-    final scanDuration = Duration(microseconds: (durationInSeconds * 1000000).round());
+
+    final scanDuration =
+        Duration(microseconds: (durationInSeconds * 1000000).round());
     final hasLidar = (data['has_lidar'] as String? ?? 'false') == 'true';
 
     return ScanMetadata(
@@ -201,24 +234,29 @@ class OptimizedMapper {
     );
   }
 
-  static ScanConfidence _toScanConfidenceOptimized(Map<String, dynamic>? confidenceData, Map<String, dynamic>? roomData) {
+  static ScanConfidence _toScanConfidenceOptimized(
+      Map<String, dynamic>? confidenceData, Map<String, dynamic>? roomData) {
     if (confidenceData?.containsKey('overall') == true) {
       return ScanConfidence(
         overall: (confidenceData!['overall'] as num?)?.toDouble() ?? 0.0,
-        wallAccuracy: (confidenceData['wallAccuracy'] as num?)?.toDouble() ?? 0.0,
-        dimensionAccuracy: (confidenceData['dimensionAccuracy'] as num?)?.toDouble() ?? 0.0,
+        wallAccuracy:
+            (confidenceData['wallAccuracy'] as num?)?.toDouble() ?? 0.0,
+        dimensionAccuracy:
+            (confidenceData['dimensionAccuracy'] as num?)?.toDouble() ?? 0.0,
       );
     }
 
     // Performance optimization: Efficient confidence calculation with single pass
     if (roomData == null) {
-      return const ScanConfidence(overall: 0.0, wallAccuracy: 0.0, dimensionAccuracy: 0.0);
+      return const ScanConfidence(
+          overall: 0.0, wallAccuracy: 0.0, dimensionAccuracy: 0.0);
     }
 
     return _calculateConfidenceFromRoomData(roomData);
   }
 
-  static ScanConfidence _calculateConfidenceFromRoomData(Map<String, dynamic> roomData) {
+  static ScanConfidence _calculateConfidenceFromRoomData(
+      Map<String, dynamic> roomData) {
     // Performance optimization: Single-pass calculation with early termination
     double wallSum = 0, objectSum = 0, totalSum = 0;
     int wallCount = 0, objectCount = 0, totalCount = 0;
@@ -226,7 +264,8 @@ class OptimizedMapper {
     // Process walls
     final walls = roomData['walls'] as List? ?? <dynamic>[];
     for (final wall in walls) {
-      final confidence = _getConfidenceValueOptimized(wall['confidence'] as String?);
+      final confidence =
+          _getConfidenceValueOptimized(wall['confidence'] as String?);
       wallSum += confidence;
       totalSum += confidence;
       wallCount++;
@@ -236,7 +275,8 @@ class OptimizedMapper {
     // Process objects
     final objects = roomData['objects'] as List? ?? <dynamic>[];
     for (final object in objects) {
-      final confidence = _getConfidenceValueOptimized(object['confidence'] as String?);
+      final confidence =
+          _getConfidenceValueOptimized(object['confidence'] as String?);
       objectSum += confidence;
       totalSum += confidence;
       objectCount++;
@@ -247,7 +287,8 @@ class OptimizedMapper {
     for (final listKey in ['doors', 'windows', 'openings']) {
       final items = roomData[listKey] as List? ?? <dynamic>[];
       for (final item in items) {
-        final confidence = _getConfidenceValueOptimized(item['confidence'] as String?);
+        final confidence =
+            _getConfidenceValueOptimized(item['confidence'] as String?);
         totalSum += confidence;
         totalCount++;
       }
@@ -268,10 +309,14 @@ class OptimizedMapper {
   static Confidence _toConfidenceOptimized(String? confidence) {
     // Performance optimization: Direct enum lookup without caching
     switch (confidence) {
-      case 'low': return Confidence.low;
-      case 'medium': return Confidence.medium;
-      case 'high': return Confidence.high;
-      default: return Confidence.low;
+      case 'low':
+        return Confidence.low;
+      case 'medium':
+        return Confidence.medium;
+      case 'high':
+        return Confidence.high;
+      default:
+        return Confidence.low;
     }
   }
 
