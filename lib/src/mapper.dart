@@ -30,12 +30,12 @@ ScanResult? parseScanResultLegacy(String? jsonResult) {
 ScanResult _toScanResult(Map<String, dynamic> data) {
   // Handle case where data is directly the room data (like in our test JSON)
   final roomData = data['room'] as Map<String, dynamic>? ?? data;
-  
+
   return ScanResult(
     room: _toRoomData(roomData),
     metadata: _toScanMetadata(data['metadata'] as Map<String, dynamic>?),
-    confidence: _toScanConfidence(data['confidence'] as Map<String, dynamic>? ?? 
-                                 roomData['confidence'] as Map<String, dynamic>?),
+    confidence: _toScanConfidence(data['confidence'] as Map<String, dynamic>? ??
+        roomData['confidence'] as Map<String, dynamic>?),
   );
 }
 
@@ -48,8 +48,9 @@ RoomData _toRoomData(Map<String, dynamic> data) {
       : null;
 
   return RoomData(
-    dimensions: _toRoomDimensions(data['dimensions'] as Map<String, dynamic>?) ?? 
-                floor?.dimensions,
+    dimensions:
+        _toRoomDimensions(data['dimensions'] as Map<String, dynamic>?) ??
+            floor?.dimensions,
     walls: (data['walls'] as List? ?? [])
         .map((w) => _toWallData(w as Map<String, dynamic>))
         .toList(),
@@ -74,10 +75,11 @@ RoomData _toRoomData(Map<String, dynamic> data) {
 
 RoomDimensions? _toRoomDimensions(Map<String, dynamic>? data) {
   if (data == null) return null;
+  // Fixed mapping: x=length, y=height, z=width (matching Swift simd_float3 convention)
   return RoomDimensions(
     length: (data['x'] as num? ?? 0.0).toDouble(),
-    width: (data['y'] as num? ?? 0.0).toDouble(),
-    height: (data['z'] as num? ?? 0.0).toDouble(),
+    width: (data['z'] as num? ?? 0.0).toDouble(),
+    height: (data['y'] as num? ?? 0.0).toDouble(),
   );
 }
 
@@ -172,7 +174,7 @@ ScanMetadata _toScanMetadata(Map<String, dynamic>? data) {
 
   // Parse duration from different possible formats
   final sessionDuration = data['session_duration'];
-  final durationInSeconds = sessionDuration is num 
+  final durationInSeconds = sessionDuration is num
       ? sessionDuration.toDouble()
       : double.tryParse(sessionDuration?.toString() ?? '0.0') ?? 0.0;
   final scanDuration =
@@ -203,7 +205,8 @@ ScanConfidence _toScanConfidence(Map<String, dynamic>? confidenceData) {
     return ScanConfidence(
       overall: (confidenceData['overall'] as num?)?.toDouble() ?? 0.0,
       wallAccuracy: (confidenceData['wallAccuracy'] as num?)?.toDouble() ?? 0.0,
-      dimensionAccuracy: (confidenceData['dimensionAccuracy'] as num?)?.toDouble() ?? 0.0,
+      dimensionAccuracy:
+          (confidenceData['dimensionAccuracy'] as num?)?.toDouble() ?? 0.0,
     );
   }
 
