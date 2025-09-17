@@ -1,3 +1,9 @@
+## 0.1.3
+
+- **Fix**: 🚨 **Critical Dimension Mapping Fix** - Corrected coordinate system mapping in both `mapper.dart` and `optimized_mapper.dart` to properly match Swift's simd_float3 convention (x=length, y=height, z=width). This fixes incorrect room dimension calculations that were previously swapping width and height values.
+- **Enhancement**: Improved code formatting and readability across mapper classes for better maintainability.
+- **Performance**: Enhanced optimized mapper with better code organization and formatting while maintaining performance benefits.
+
 ## 0.1.2
 
 - **Feature(iOS)**: Added floor and ceiling detection. Derives horizontal extents from walls, computes floor (min Y) and ceiling (max Y), and emits `floor`/`ceiling` surfaces with full dimensions and transforms.
