@@ -38,6 +38,7 @@ struct SerializableRoom: Encodable {
   let openings: [SerializableSurface]
   let floor: SerializableSurface?
   let ceiling: SerializableSurface?
+  let dimensions: SerializableVector?
 
   init(from room: CapturedRoom) {
     self.walls = room.walls.map { SerializableSurface(from: $0) }
@@ -46,17 +47,18 @@ struct SerializableRoom: Encodable {
     self.windows = room.windows.map { SerializableSurface(from: $0) }
     self.openings = room.openings.map { SerializableSurface(from: $0) }
 
-    let (floor, ceiling) = Self.findFloorAndCeiling(room: room)
+    let (floor, ceiling, dimensions) = Self.findFloorAndCeiling(room: room)
     self.floor = floor
     self.ceiling = ceiling
+    self.dimensions = dimensions
   }
 
   private static func findFloorAndCeiling(room: CapturedRoom) -> (
-    SerializableSurface?, SerializableSurface?
+    SerializableSurface?, SerializableSurface?, SerializableVector?
   ) {
     // Derive floor and ceiling from wall geometry by projecting to XZ and using Y extents
     let walls = room.walls
-    guard !walls.isEmpty else { return (nil, nil) }
+    guard !walls.isEmpty else { return (nil, nil, nil) }
 
     var minFloorY: Float = .greatestFiniteMagnitude
     var maxCeilingY: Float = -.greatestFiniteMagnitude
@@ -105,7 +107,7 @@ struct SerializableRoom: Encodable {
 
     // Guard against degenerate rooms
     if !length.isFinite || !width.isFinite || length == 0 || width == 0 {
-      return (nil, nil)
+      return (nil, nil, nil)
     }
 
     // Build transforms centered in XZ bounds at floor/ceiling heights
@@ -141,6 +143,14 @@ struct SerializableRoom: Encodable {
 
     let conf = confidenceString(from: confidences)
 
+    // Calculate room height from floor to ceiling
+    let height = max(0.0, maxCeilingY - minFloorY)
+
+    // Create room dimensions vector (x=length, y=height, z=width)
+    let roomDimensions = SerializableVector(
+      from: simd_float3(length, height, width)
+    )
+
     // Construct serializable surfaces for floor and ceiling
     let floorSurface = SerializableSurface(
       category: "floor",
@@ -156,7 +166,7 @@ struct SerializableRoom: Encodable {
       confidence: conf
     )
 
-    return (floorSurface, ceilingSurface)
+    return (floorSurface, ceilingSurface, roomDimensions)
   }
 }
 
