@@ -1,10 +1,3 @@
-/// A Flutter plugin for using Apple's RoomPlan API.
-///
-/// This library provides a high-level API to interact with the RoomPlan
-/// framework on iOS, allowing you to easily initiate room scanning sessions
-/// and receive structured data about the scanned environment.
-library roomplan_flutter;
-
 // Main scanner class
 export 'api/room_plan_scanner.dart';
 

@@ -11,7 +11,7 @@ void main() {
 
   const mockScanResultJson = '''
   {
-    "dimensions": {"x": 5.0, "y": 4.0, "z": 2.5},
+    "dimensions": {"x": 5.0, "y": 2.5, "z": 4.0},
     "walls": [], "objects": [], "doors": [], "windows": [],
     "metadata": { "session_duration": 120 },
     "confidence": { "overall": 0.8 }

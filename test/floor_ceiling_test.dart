@@ -14,7 +14,7 @@ void main() {
           'openings': [],
           'floor': {
             'uuid': 'f',
-            'dimensions': {'x': 5.0, 'y': 4.0, 'z': 0.0},
+            'dimensions': {'x': 5.0, 'y': 0.0, 'z': 4.0},
             'transform': List<double>.filled(16, 0)
               ..[0] = 1
               ..[5] = 1
@@ -24,7 +24,7 @@ void main() {
           },
           'ceiling': {
             'uuid': 'c',
-            'dimensions': {'x': 5.0, 'y': 4.0, 'z': 0.0},
+            'dimensions': {'x': 5.0, 'y': 0.0, 'z': 4.0},
             'transform': List<double>.filled(16, 0)
               ..[0] = 1
               ..[5] = 1
