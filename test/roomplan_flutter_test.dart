@@ -7,7 +7,6 @@ void main() {
 
   const MethodChannel channel =
       MethodChannel('roomplan_flutter/method_channel');
-  
 
   const mockScanResultJson = '''
   {
@@ -75,7 +74,8 @@ void main() {
       scanner.dispose();
     });
 
-    test('startScanning throws RoomPlanPermissionsException when permission denied',
+    test(
+        'startScanning throws RoomPlanPermissionsException when permission denied',
         () async {
       TestWidgetsFlutterBinding.instance.defaultBinaryMessenger
           .setMockMethodCallHandler(
@@ -109,7 +109,7 @@ void main() {
 
       final scanner = RoomPlanScanner();
       await scanner.stopScanning();
-      
+
       expect(stopCalled, isTrue);
       scanner.dispose();
     });
@@ -127,15 +127,15 @@ void main() {
 
       final scanner = RoomPlanScanner();
       final result = await scanner.startScanning();
-      
+
       expect(result, isNotNull);
       // Add a null check for dimensions
-      expect(result!.room.dimensions, isNotNull); 
+      expect(result!.room.dimensions, isNotNull);
       expect(result.room.dimensions!.length, equals(5.0));
       expect(result.room.dimensions!.width, equals(4.0));
       expect(result.room.dimensions!.height, equals(2.5));
       expect(result.confidence.overall, equals(0.8));
-      
+
       scanner.dispose();
     });
   });
