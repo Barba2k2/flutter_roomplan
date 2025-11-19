@@ -1,3 +1,9 @@
+## 0.1.4
+
+- **Feature**: Added automatic room dimensions calculation from floor to ceiling height in `RoomPlanJSONConverter`. The room now includes complete dimensions (length, width, height) derived from wall geometry.
+- **Enhancement**: Improved example app code formatting and readability in advanced scanning page for better maintainability.
+- **Chore**: Updated devtools configuration in example app.
+
 ## 0.1.3
 
 - **Fix**: 🚨 **Critical Dimension Mapping Fix** - Corrected coordinate system mapping in both `mapper.dart` and `optimized_mapper.dart` to properly match Swift's simd_float3 convention (x=length, y=height, z=width). This fixes incorrect room dimension calculations that were previously swapping width and height values.
