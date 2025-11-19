@@ -424,30 +424,40 @@ class _AdvancedScanningPageState extends State<AdvancedScanningPage> {
               Text('Room Dimensions (${_selectedUnit.displayName}):'),
               if (result.room.dimensions != null) ...[
                 Text(
-                    '  Length: ${result.room.dimensions!.getFormattedLength(_selectedUnit)}'),
+                  '  Length: ${result.room.dimensions!.getFormattedLength(_selectedUnit)}',
+                ),
                 Text(
-                    '  Width: ${result.room.dimensions!.getFormattedWidth(_selectedUnit)}'),
+                  '  Width: ${result.room.dimensions!.getFormattedWidth(_selectedUnit)}',
+                ),
                 Text(
-                    '  Height: ${result.room.dimensions!.getFormattedHeight(_selectedUnit)}'),
+                  '  Height: ${result.room.dimensions!.getFormattedHeight(_selectedUnit)}',
+                ),
                 Text(
-                    '  Floor Area: ${result.room.dimensions!.getFormattedFloorArea(_selectedUnit)}'),
+                  '  Floor Area: ${result.room.dimensions!.getFormattedFloorArea(_selectedUnit)}',
+                ),
                 Text(
-                    '  Volume: ${result.room.dimensions!.getFormattedVolume(_selectedUnit)}'),
+                  '  Volume: ${result.room.dimensions!.getFormattedVolume(_selectedUnit)}',
+                ),
               ] else
                 Text('  Not available'),
               const SizedBox(height: 16),
               Text('Scan Metadata:'),
-              Text('  Duration: ${result.metadata.scanDuration.inSeconds}s'),
+              Text(
+                '  Duration: ${result.metadata.scanDuration.inSeconds}s',
+              ),
               Text('  Device: ${result.metadata.deviceModel}'),
               Text('  Has LiDAR: ${result.metadata.hasLidar ? 'Yes' : 'No'}'),
               const SizedBox(height: 16),
               Text('Confidence Scores:'),
               Text(
-                  '  Overall: ${(result.confidence.overall * 100).toStringAsFixed(1)}%'),
+                '  Overall: ${(result.confidence.overall * 100).toStringAsFixed(1)}%',
+              ),
               Text(
-                  '  Wall Accuracy: ${(result.confidence.wallAccuracy * 100).toStringAsFixed(1)}%'),
+                '  Wall Accuracy: ${(result.confidence.wallAccuracy * 100).toStringAsFixed(1)}%',
+              ),
               Text(
-                  '  Dimension Accuracy: ${(result.confidence.dimensionAccuracy * 100).toStringAsFixed(1)}%'),
+                '  Dimension Accuracy: ${(result.confidence.dimensionAccuracy * 100).toStringAsFixed(1)}%',
+              ),
             ],
           ),
         ),
@@ -560,8 +570,10 @@ class _ConfigurationDialogState extends State<_ConfigurationDialog> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Detection Features',
-                        style: Theme.of(context).textTheme.titleSmall),
+                    Text(
+                      'Detection Features',
+                      style: Theme.of(context).textTheme.titleSmall,
+                    ),
                     const SizedBox(height: 8),
                     SwitchListTile(
                       title: const Text('Real-time Updates'),
@@ -569,8 +581,9 @@ class _ConfigurationDialogState extends State<_ConfigurationDialog> {
                       value: _config.enableRealtimeUpdates,
                       onChanged: (value) {
                         setState(() {
-                          _config =
-                              _config.copyWith(enableRealtimeUpdates: value);
+                          _config = _config.copyWith(
+                            enableRealtimeUpdates: value,
+                          );
                         });
                       },
                     ),
@@ -611,8 +624,10 @@ class _ConfigurationDialogState extends State<_ConfigurationDialog> {
 
             // Preset Buttons
             const SizedBox(height: 16),
-            Text('Quick Presets',
-                style: Theme.of(context).textTheme.titleSmall),
+            Text(
+              'Quick Presets',
+              style: Theme.of(context).textTheme.titleSmall,
+            ),
             const SizedBox(height: 8),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
