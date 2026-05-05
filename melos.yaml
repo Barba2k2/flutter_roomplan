@@ -1,0 +1,44 @@
+name: flutter_apple_camera_workspace
+repository: https://github.com/Barba2k2/flutter_roomplan
+
+packages:
+  - packages/*
+  - packages/*/example
+
+ide:
+  intellij:
+    enabled: false
+
+command:
+  bootstrap:
+    runPubGetInParallel: false
+  version:
+    workspaceChangelog: false
+    updateGitTagRefs: true
+    linkToCommits: true
+    branch: main
+
+scripts:
+  analyze:
+    description: Run `dart analyze` across all packages.
+    run: melos exec -c 1 -- "dart analyze ."
+
+  format:
+    description: Format Dart code across all packages.
+    run: melos exec -c 1 -- "dart format ."
+
+  format-check:
+    description: Verify formatting without writing changes (CI).
+    run: melos exec -c 1 -- "dart format --set-exit-if-changed ."
+
+  test:
+    description: Run Flutter tests in every package that has a `test/` directory.
+    run: melos exec -c 1 --dir-exists=test -- "flutter test"
+
+  clean:
+    description: Run `flutter clean` in every package.
+    run: melos exec -c 1 -- "flutter clean"
+
+  pub-get:
+    description: Run `flutter pub get` in every package.
+    run: melos exec -c 1 -- "flutter pub get"
