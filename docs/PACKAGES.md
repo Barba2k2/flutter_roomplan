@@ -23,11 +23,12 @@ This document tracks every package planned for or shipped from this monorepo, al
 
 ### `flutter_object_capture`
 
-- **Status:** Planned
-- **Apple framework:** [RealityKit Object Capture](https://developer.apple.com/documentation/realitykit/photogrammetrysession) (`PhotogrammetrySession`)
-- **Platforms:** iOS 17+ (on-device); macOS 12+ (desktop pipeline)
-- **Scope:** Photogrammetry pipeline. Takes a folder of photos and produces a textured 3D mesh (`USDZ` / `OBJ`).
+- **Status:** In progress (scaffolding landed at `0.0.1`; native implementation pending)
+- **Apple framework:** [RealityKit Object Capture](https://developer.apple.com/documentation/realitykit/photogrammetrysession) (`ObjectCaptureSession` + `PhotogrammetrySession`)
+- **Platforms:** iOS 17+ (on-device); macOS 12+ (desktop pipeline) is a future target.
+- **Scope:** Guided photo capture and on-device photogrammetry. Takes a set of photos and produces a textured `USDZ` model.
 - **Synergy with RoomPlan:** RoomPlan returns furniture as bounding boxes only; Object Capture lets the consumer turn those boxes into photorealistic meshes.
+- **Source:** [`packages/flutter_object_capture`](../packages/flutter_object_capture)
 
 ### `flutter_realitykit`
 
