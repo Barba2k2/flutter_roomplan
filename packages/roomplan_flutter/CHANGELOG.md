@@ -1,3 +1,7 @@
+## 0.1.5
+
+- **Feature**: Added Swift Package Manager support. The plugin now ships with a `Package.swift` manifest alongside the existing `roomplan_flutter.podspec`, so projects on Flutter 3.24+ resolve it via SwiftPM while older projects continue to use CocoaPods. Swift sources moved from `ios/Classes/` to `ios/roomplan_flutter/Sources/roomplan_flutter/`. No public Dart or Swift API changed.
+
 ## 0.1.4
 
 - **Feature**: Added automatic room dimensions calculation from floor to ceiling height in `RoomPlanJSONConverter`. The room now includes complete dimensions (length, width, height) derived from wall geometry.

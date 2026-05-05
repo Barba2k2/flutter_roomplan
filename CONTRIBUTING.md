@@ -74,6 +74,51 @@ flutter run
 
 Naming convention: `flutter_<framework>` for new packages (e.g. `flutter_object_capture`). The legacy `roomplan_flutter` is preserved because it is already published on pub.dev.
 
+### iOS plugin layout (dual SPM + CocoaPods)
+
+Every native plugin in this repo must work with both Swift Package Manager
+(default in Flutter 3.24+) and CocoaPods. Use this structure:
+
+```
+packages/<plugin_name>/ios/
+├── <plugin_name>/
+│   ├── Package.swift
+│   └── Sources/
+│       └── <plugin_name>/
+│           └── *.swift
+└── <plugin_name>.podspec
+```
+
+`Package.swift` template (replace `<plugin_name>` and the iOS deployment
+target):
+
+```swift
+// swift-tools-version: 5.9
+import PackageDescription
+
+let package = Package(
+    name: "<plugin_name>",
+    platforms: [.iOS("17.0")],
+    products: [
+        .library(name: "<plugin-name-with-dashes>", targets: ["<plugin_name>"])
+    ],
+    dependencies: [],
+    targets: [
+        .target(name: "<plugin_name>", dependencies: [], resources: [])
+    ]
+)
+```
+
+Podspec `s.source_files` line:
+
+```ruby
+s.source_files = '<plugin_name>/Sources/<plugin_name>/**/*.swift'
+```
+
+Keep `Package.swift`'s platform constraint and the podspec's
+`s.platform` in sync. New Swift files only need to land under
+`Sources/<plugin_name>/` — no manifest edits required.
+
 ## Releasing
 
 Each package is versioned independently. Tags follow the pattern `<package_name>-v<version>` (e.g. `roomplan_flutter-v0.1.5`).

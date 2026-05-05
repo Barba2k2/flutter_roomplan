@@ -3,7 +3,7 @@
 #
 Pod::Spec.new do |s|
   s.name             = 'roomplan_flutter'
-  s.version          = '0.1.1'
+  s.version          = '0.1.5'
   s.summary          = 'A Flutter plugin to use Apple\'s RoomPlan API.'
   s.description      = <<-DESC
 A Flutter plugin for iOS that provides access to Apple's RoomPlan API, allowing you to easily scan an interior room and receive a 3D model with detailed measurements.
@@ -12,7 +12,7 @@ A Flutter plugin for iOS that provides access to Apple's RoomPlan API, allowing 
   s.license          = { :file => '../LICENSE' }
   s.author           = { 'PaintPro' => 'suporte@paintpro.com.br' }
   s.source           = { :path => '.' }
-  s.source_files = 'Classes/**/*'
+  s.source_files = 'roomplan_flutter/Sources/roomplan_flutter/**/*.swift'
   s.dependency 'Flutter'
   s.platform = :ios, '16.0'
 

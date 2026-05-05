@@ -1,6 +1,10 @@
 #
 # To learn more about a Podspec see http://guides.cocoapods.org/syntax/podspec.html.
 #
+# Source files live under `flutter_object_capture/Sources/flutter_object_capture/`
+# so the same tree is consumed by both Swift Package Manager (via Package.swift)
+# and CocoaPods (via this spec).
+#
 Pod::Spec.new do |s|
   s.name             = 'flutter_object_capture'
   s.version          = '0.0.1'
@@ -14,7 +18,7 @@ guided photo capture (ObjectCaptureSession) and on-device photogrammetry
   s.license          = { :file => '../LICENSE' }
   s.author           = { 'PaintPro' => 'suporte@paintpro.com.br' }
   s.source           = { :path => '.' }
-  s.source_files = 'Classes/**/*'
+  s.source_files = 'flutter_object_capture/Sources/flutter_object_capture/**/*.swift'
   s.dependency 'Flutter'
   s.platform = :ios, '17.0'
 

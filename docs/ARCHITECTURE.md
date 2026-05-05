@@ -74,13 +74,13 @@ flutter_roomplan/                 # repo root
     ├── roomplan_flutter/         # plugin (iOS native)
     │   ├── pubspec.yaml
     │   ├── lib/
-    │   ├── ios/
+    │   ├── ios/                  # see "iOS package layout" below
     │   ├── test/
     │   ├── example/              # plugin's own example app
     │   ├── README.md             # consumer-facing
     │   ├── CHANGELOG.md
     │   └── LICENSE
-    ├── flutter_object_capture/   # (planned)
+    ├── flutter_object_capture/   # (in progress)
     ├── flutter_apple_vision/     # (planned)
     ├── ...
     └── apple_camera_kit/         # (planned) umbrella, pure Dart
@@ -88,6 +88,46 @@ flutter_roomplan/                 # repo root
         └── lib/
             └── apple_camera_kit.dart
 ```
+
+### iOS package layout (dual SPM + CocoaPods)
+
+Every native plugin in this repo ships its iOS sources in a single tree
+that is consumed simultaneously by **Swift Package Manager** (the default
+in Flutter 3.24+) and **CocoaPods** (legacy / fallback). Consumers do not
+need to opt in to either build system — Flutter picks the right one
+automatically.
+
+```
+packages/<plugin_name>/
+└── ios/
+    ├── <plugin_name>/                          # Swift Package
+    │   ├── Package.swift                       # SPM manifest
+    │   └── Sources/
+    │       └── <plugin_name>/                  # actual Swift sources
+    │           ├── SwiftFlutter<Name>Plugin.swift
+    │           └── ...
+    └── <plugin_name>.podspec                   # CocoaPods spec
+```
+
+Both build systems point at the same `Sources/<plugin_name>/` directory:
+
+- `Package.swift` declares a target named `<plugin_name>` whose default
+  source location is `Sources/<plugin_name>/`.
+- The podspec's `s.source_files` is updated to
+  `'<plugin_name>/Sources/<plugin_name>/**/*.swift'`.
+- The product exposed by SPM uses the dashed form of the plugin name
+  (e.g. `roomplan-flutter`, `flutter-object-capture`) — Flutter's tooling
+  resolves products by that convention.
+
+Conventions:
+
+- The SPM platform constraint in `Package.swift` mirrors the podspec's
+  `s.platform`. They must stay in sync.
+- Headers, Objective-C bridging, and resource bundles (`Resources/`,
+  `PrivacyInfo.xcprivacy`) live inside `Sources/<plugin_name>/` so both
+  build systems pick them up.
+- Adding a new Swift file requires no changes to either manifest as long
+  as it lands under `Sources/<plugin_name>/`.
 
 ## Naming conventions
 
