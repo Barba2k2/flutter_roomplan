@@ -1,6 +1,6 @@
 name: flutter_object_capture
 description: Flutter plugin for Apple's RealityKit Object Capture (PhotogrammetrySession) — guided photo capture and on-device photogrammetry that turns a set of images into a textured USDZ model on iOS.
-version: 0.0.1
+version: 0.0.2
 homepage: https://github.com/Barba2k2/flutter_roomplan/tree/master/packages/flutter_object_capture
 repository: https://github.com/Barba2k2/flutter_roomplan
 issue_tracker: https://github.com/Barba2k2/flutter_roomplan/issues

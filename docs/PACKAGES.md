@@ -23,7 +23,7 @@ This document tracks every package planned for or shipped from this monorepo, al
 
 ### `flutter_object_capture`
 
-- **Status:** In progress (scaffolding landed at `0.0.1`; native implementation pending)
+- **Status:** Alpha (`0.0.2` — both `ObjectCaptureSession` and `PhotogrammetrySession` wired through; not yet validated on a real device)
 - **Apple framework:** [RealityKit Object Capture](https://developer.apple.com/documentation/realitykit/photogrammetrysession) (`ObjectCaptureSession` + `PhotogrammetrySession`)
 - **Platforms:** iOS 17+ (on-device); macOS 12+ (desktop pipeline) is a future target.
 - **Scope:** Guided photo capture and on-device photogrammetry. Takes a set of photos and produces a textured `USDZ` model.

@@ -1,8 +1,12 @@
-/// Lifecycle states of an [ObjectCaptureSession][1] running on iOS.
+/// Lifecycle states reported by the plugin.
 ///
-/// Mirrors `ObjectCaptureSession.CaptureState` from RealityKit.
+/// The first seven values mirror `ObjectCaptureSession.CaptureState` from
+/// RealityKit on iOS 17+ and describe a guided photo-capture session.
+/// [CaptureState.reconstructing] is plugin-specific and is emitted while a
+/// `PhotogrammetrySession` is processing photos into a 3D model.
 ///
-/// [1]: https://developer.apple.com/documentation/realitykit/objectcapturesession
+/// See also:
+/// https://developer.apple.com/documentation/realitykit/objectcapturesession
 enum CaptureState {
   /// The session is being configured.
   initializing,
@@ -24,4 +28,8 @@ enum CaptureState {
 
   /// The session ended in an error state.
   failed,
+
+  /// A `PhotogrammetrySession` is processing captured images into a 3D model.
+  /// Emitted by [FlutterObjectCapture.reconstruct].
+  reconstructing,
 }

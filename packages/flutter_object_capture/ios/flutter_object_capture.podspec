@@ -7,7 +7,7 @@
 #
 Pod::Spec.new do |s|
   s.name             = 'flutter_object_capture'
-  s.version          = '0.0.1'
+  s.version          = '0.0.2'
   s.summary          = 'A Flutter plugin to use Apple\'s RealityKit Object Capture (PhotogrammetrySession).'
   s.description      = <<-DESC
 A Flutter plugin for iOS that wraps Apple's Object Capture pipeline:

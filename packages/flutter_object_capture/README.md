@@ -1,11 +1,11 @@
 # flutter_object_capture
 
 [![pub package](https://img.shields.io/badge/pub-pending-lightgrey.svg)](https://pub.dev/)
-[![status](https://img.shields.io/badge/status-scaffolding-orange.svg)](#status)
+[![status](https://img.shields.io/badge/status-alpha-yellow.svg)](#status)
 
 Flutter plugin for Apple's [RealityKit Object Capture](https://developer.apple.com/documentation/realitykit/photogrammetrysession) — guided photo capture and on-device photogrammetry that turns a set of images into a textured USDZ 3D model on iOS.
 
-> **Status:** Early scaffolding (`v0.0.1`). The Dart public API surface is defined; the iOS native implementation is pending. **Do not use in production yet.**
+> **Status:** Alpha (`v0.0.2`). Both `ObjectCaptureSession` and `PhotogrammetrySession` are wired through to Dart. The plugin has not yet been validated end-to-end on a physical device — expect rough edges and please file issues. **Do not ship to production yet.**
 
 ## Why this package
 
@@ -22,18 +22,35 @@ This plugin wraps both, exposing a clean Dart API for Flutter apps. It pairs nat
 - A device with the A14 Bionic chip or newer (iPhone 12 Pro / iPad Pro 2020 or later)
 - LiDAR sensor recommended for best results
 
-## Planned API
+## Setup
+
+### Info.plist
+
+The user must grant camera access for guided capture. Add to your app's
+`ios/Runner/Info.plist`:
+
+```xml
+<key>NSCameraUsageDescription</key>
+<string>Used to capture photos of the object you want to scan.</string>
+```
+
+### iOS deployment target
+
+The plugin requires iOS 17+. Make sure your `Podfile` (CocoaPods) or your
+project settings (Swift Package Manager) declare `platform :ios, '17.0'`
+or later.
+
+## Usage
 
 ```dart
 import 'package:flutter_object_capture/flutter_object_capture.dart';
 
-// 1. Check support
+// 1. Check support (iOS 17+, A14 Bionic or newer with LiDAR)
 final supported = await FlutterObjectCapture.isSupported();
 
-// 2. Capture photos around an object (guided UI)
+// 2. Capture photos around an object (guided full-screen UI)
 final capture = await FlutterObjectCapture.captureObject(
   configuration: const ObjectCaptureConfiguration(
-    isObjectMaskingEnabled: true,
     isOverCaptureEnabled: false,
   ),
 );
@@ -46,7 +63,7 @@ final model = await FlutterObjectCapture.reconstruct(
 
 print('USDZ written to ${model.modelPath}');
 
-// 4. Listen to capture progress
+// 4. Listen to progress (capture state changes + photogrammetry progress)
 FlutterObjectCapture.events.listen((event) {
   print('${event.state}: ${event.progress}');
 });
@@ -68,19 +85,24 @@ FlutterObjectCapture.events.listen((event) {
 
 | Feature | Dart API | iOS native |
 | --- | --- | --- |
-| `isSupported()` | scaffolded | not implemented |
-| `captureObject()` | scaffolded | not implemented |
-| `reconstruct()` | scaffolded | not implemented |
-| `events` stream | scaffolded | not implemented |
+| `isSupported()` | shipped | shipped |
+| `captureObject()` | shipped | shipped (alpha) |
+| `reconstruct()` | shipped | shipped (alpha) |
+| `events` stream | shipped | shipped |
 
-The native implementation will land in subsequent releases. See [`CHANGELOG.md`](CHANGELOG.md) for progress.
+Both `ObjectCaptureSession` and `PhotogrammetrySession` are wired
+through. The native flow has not been validated end-to-end on a real
+device yet — bugs are expected. See [`CHANGELOG.md`](CHANGELOG.md) for
+progress.
 
 ## Roadmap
 
-- [ ] Wire `ObjectCaptureSession` to method / event channels (iOS 17+).
-- [ ] Wire `PhotogrammetrySession` reconstruction to a method channel.
-- [ ] Surface progress events via the event channel.
+- [x] Wire `ObjectCaptureSession` to method / event channels (iOS 17+).
+- [x] Wire `PhotogrammetrySession` reconstruction to a method channel.
+- [x] Surface progress events via the event channel.
+- [ ] Validate the full pipeline on a physical iPhone 12 Pro / 15 Pro device.
 - [ ] Add an example app (capture → reconstruct → preview USDZ).
+- [ ] Customisable capture UI (replace the bundled SwiftUI overlay).
 - [ ] macOS desktop reconstruction path (`PhotogrammetrySession` on macOS 12+).
 - [ ] Resume / restore an interrupted capture session.
 

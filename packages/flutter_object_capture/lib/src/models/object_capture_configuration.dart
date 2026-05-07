@@ -4,25 +4,22 @@
 /// from RealityKit on iOS 17+.
 class ObjectCaptureConfiguration {
   const ObjectCaptureConfiguration({
-    this.isObjectMaskingEnabled = true,
     this.isOverCaptureEnabled = false,
     this.checkpointDirectory,
   });
 
-  /// Whether the system should mask the object from its background during
-  /// capture. Improves reconstruction quality at a small performance cost.
-  final bool isObjectMaskingEnabled;
-
-  /// Whether to capture extra detail passes (e.g. additional close-up shots).
-  /// Increases capture time and output size.
+  /// Whether to capture an extra "over capture" pass with additional
+  /// close-up photos. Increases capture time and output size, but improves
+  /// reconstruction quality.
   final bool isOverCaptureEnabled;
 
-  /// Directory where intermediate checkpoints are stored. When provided, an
-  /// interrupted session can be resumed from the same directory.
+  /// Directory where the session writes its intermediate checkpoints.
+  ///
+  /// When null, a temporary directory is allocated automatically. Provide a
+  /// stable path to allow resuming an interrupted session from disk.
   final String? checkpointDirectory;
 
   Map<String, Object?> toJson() => {
-        'isObjectMaskingEnabled': isObjectMaskingEnabled,
         'isOverCaptureEnabled': isOverCaptureEnabled,
         if (checkpointDirectory != null)
           'checkpointDirectory': checkpointDirectory,
