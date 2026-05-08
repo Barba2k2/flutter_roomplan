@@ -70,17 +70,20 @@ flutter_roomplan/                 # repo root
 ├── docs/
 │   ├── ARCHITECTURE.md           # this file
 │   └── PACKAGES.md               # roadmap and per-package scope
+├── example/                      # shared demo app
+│   ├── pubspec.yaml              # path-depends on every plugin in packages/
+│   ├── lib/
+│   └── ios/
 └── packages/
     ├── roomplan_flutter/         # plugin (iOS native)
     │   ├── pubspec.yaml
     │   ├── lib/
     │   ├── ios/                  # see "iOS package layout" below
     │   ├── test/
-    │   ├── example/              # plugin's own example app
     │   ├── README.md             # consumer-facing
     │   ├── CHANGELOG.md
     │   └── LICENSE
-    ├── flutter_object_capture/   # (in progress)
+    ├── flutter_object_capture/   # (alpha)
     ├── flutter_apple_vision/     # (planned)
     ├── ...
     └── apple_camera_kit/         # (planned) umbrella, pure Dart
@@ -88,6 +91,24 @@ flutter_roomplan/                 # repo root
         └── lib/
             └── apple_camera_kit.dart
 ```
+
+### Why a single shared example app
+
+Each plugin in this monorepo could in principle ship its own example app
+under `packages/<plugin>/example/` (the standard Flutter plugin layout),
+but the family is small, every plugin targets the same iOS deployment,
+and the demos overlap (e.g. an Object Capture flow naturally builds on
+RoomPlan output). To avoid the maintenance cost of N near-identical
+Runner projects, the entire family demos through one `example/` at the
+repo root. Each plugin is added as a regular `path:` dependency in the
+example's `pubspec.yaml`.
+
+Trade-off: pub.dev surfaces a package's example by reading
+`<package>/example/`. Without per-package examples, pub.dev shows none
+and the affected packages lose ~10 pub points each. The plugin READMEs
+link to the shared app at
+`https://github.com/Barba2k2/flutter_roomplan/tree/master/example` to
+preserve discoverability.
 
 ### iOS package layout (dual SPM + CocoaPods)
 

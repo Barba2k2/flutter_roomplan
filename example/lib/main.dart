@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:example/views/home_page.dart';
+import 'package:example/views/object_capture_page.dart';
 import 'advanced_scanning_page.dart';
 import 'package:provider/provider.dart';
 import 'package:example/viewmodels/scanner_view_model.dart';
@@ -16,7 +17,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'RoomPlan Flutter Example',
+      title: 'Apple Camera APIs Examples',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
@@ -45,6 +46,7 @@ class _MainNavigationPageState extends State<MainNavigationPage> {
   final List<Widget> _pages = [
     const HomePage(),
     const AdvancedScanningPage(),
+    const ObjectCapturePage(),
   ];
 
   @override
@@ -58,14 +60,19 @@ class _MainNavigationPageState extends State<MainNavigationPage> {
             _currentIndex = index;
           });
         },
+        type: BottomNavigationBarType.fixed,
         items: const [
           BottomNavigationBarItem(
             icon: Icon(Icons.home),
-            label: 'Simple',
+            label: 'RoomPlan',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.settings_input_antenna),
             label: 'Advanced',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.view_in_ar),
+            label: 'Object Capture',
           ),
         ],
       ),

@@ -3,7 +3,7 @@ repository: https://github.com/Barba2k2/flutter_roomplan
 
 packages:
   - packages/*
-  - packages/*/example
+  - example
 
 ide:
   intellij:

@@ -22,6 +22,18 @@ This plugin wraps both, exposing a clean Dart API for Flutter apps. It pairs nat
 - A device with the A14 Bionic chip or newer (iPhone 12 Pro / iPad Pro 2020 or later)
 - LiDAR sensor recommended for best results
 
+## Example
+
+A working demo lives in the monorepo's shared example app at
+[`/example`](https://github.com/Barba2k2/flutter_roomplan/tree/master/example)
+— it covers Object Capture alongside the other plugins in this family.
+Run it with:
+
+```bash
+cd example
+flutter run
+```
+
 ## Setup
 
 ### Info.plist

@@ -2,6 +2,18 @@
 
 A Flutter plugin that allows you to use Apple's [RoomPlan API](https://developer.apple.com/augmented-reality/roomplan/) to scan an interior room and get a 3D model and measurements.
 
+## Example
+
+A working demo lives in the monorepo's shared example app at
+[`/example`](https://github.com/Barba2k2/flutter_roomplan/tree/master/example)
+— it covers RoomPlan alongside the other plugins in this family. Run it
+with:
+
+```bash
+cd example
+flutter run
+```
+
 ## Requirements
 
 - iOS 16.0+

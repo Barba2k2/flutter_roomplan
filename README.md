@@ -59,14 +59,16 @@ melos run pub-get       # pub get everywhere
 melos run clean         # flutter clean everywhere
 ```
 
-### Running a specific package's example
+### Running the shared example app
 
 ```bash
-cd packages/roomplan_flutter/example
+cd example
 flutter run
 ```
 
-Path-based dependencies are configured automatically by `melos bootstrap`, so editing a package's source is reflected in its example without re-installing.
+This single app demonstrates every plugin in the family — RoomPlan, Object Capture, and any future packages — under one bottom-nav UI. Path-based dependencies are configured automatically by `melos bootstrap`, so editing a package's source is reflected in the example without re-installing.
+
+> **Note:** Because the example is shared at the repo root, individual package directories no longer ship their own `example/`. This trades a small loss of pub.dev "example" surfacing for the maintenance benefit of a single demo app.
 
 ## Repository layout
 
@@ -81,13 +83,18 @@ flutter_roomplan/
 ├── docs/
 │   ├── ARCHITECTURE.md           # umbrella model, package boundaries
 │   └── PACKAGES.md               # full package roadmap
+├── example/                      # shared demo app for the entire family
+│   ├── pubspec.yaml
+│   ├── lib/
+│   └── ios/
 └── packages/
-    └── roomplan_flutter/         # first plugin (existing)
-        ├── pubspec.yaml
-        ├── lib/
-        ├── ios/
-        ├── test/
-        └── example/
+    ├── roomplan_flutter/
+    │   ├── pubspec.yaml
+    │   ├── lib/
+    │   ├── ios/
+    │   └── test/
+    └── flutter_object_capture/
+        └── ...
 ```
 
 New packages follow the same shape under `packages/<package_name>/`.

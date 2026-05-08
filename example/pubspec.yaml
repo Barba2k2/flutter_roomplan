@@ -1,0 +1,30 @@
+name: example
+description: Shared example app for the flutter_roomplan monorepo. Demonstrates every published plugin in the family — RoomPlan, Object Capture, and future Apple camera APIs.
+publish_to: 'none'
+
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.1.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  roomplan_flutter:
+    path: ../packages/roomplan_flutter
+
+  flutter_object_capture:
+    path: ../packages/flutter_object_capture
+
+  cupertino_icons: ^1.0.2
+  flutter_cube: ^0.1.1
+  provider: ^6.0.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true

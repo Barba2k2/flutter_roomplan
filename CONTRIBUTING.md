@@ -59,18 +59,30 @@ melos run format
 
 ### Working on the example app
 
+There is a single shared example app at the repo root that demonstrates
+every plugin in the family:
+
 ```bash
-cd packages/<package_name>/example
+cd example
 flutter run
 ```
+
+The app's `pubspec.yaml` declares each sibling plugin as a `path:`
+dependency, so editing a plugin's source is reflected in the example
+without re-installing.
+
+When adding a new plugin to the workspace, register it in the example by
+appending it to the example's `pubspec.yaml` and adding a page that
+demonstrates its public API.
 
 ## Adding a new package
 
 1. Create the directory: `packages/<new_package>/`.
-2. Add the standard Flutter plugin layout: `pubspec.yaml`, `lib/`, `ios/`, `example/`, `test/`, `README.md`, `CHANGELOG.md`, `LICENSE`.
+2. Add the Flutter plugin layout: `pubspec.yaml`, `lib/`, `ios/`, `test/`, `README.md`, `CHANGELOG.md`, `LICENSE`. **Do not** add a per-package `example/` — the workspace uses a single shared example at the repo root.
 3. Set `version: 0.0.1` and a clear `description` in the package's `pubspec.yaml`.
-4. Run `melos bootstrap` from the repo root so Melos picks up the new package.
-5. Document the package in [`docs/PACKAGES.md`](docs/PACKAGES.md) and add a row to the table in [`README.md`](README.md).
+4. Add the new plugin as a `path:` dependency in `example/pubspec.yaml` and create a demo page under `example/lib/views/`.
+5. Run `melos bootstrap` from the repo root so Melos picks up the new package.
+6. Document the package in [`docs/PACKAGES.md`](docs/PACKAGES.md) and add a row to the table in [`README.md`](README.md).
 
 Naming convention: `flutter_<framework>` for new packages (e.g. `flutter_object_capture`). The legacy `roomplan_flutter` is preserved because it is already published on pub.dev.
 
