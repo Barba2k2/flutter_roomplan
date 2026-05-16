@@ -46,7 +46,6 @@ pubspec_overrides.yaml
 
 # Claude and Cursor
 .claude/
-CLAUDE.md
 .cursor/
 
 # Documentation files to ignore
