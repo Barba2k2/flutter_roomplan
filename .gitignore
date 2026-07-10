@@ -30,6 +30,10 @@ pubspec.lock
 .flutter-plugins-dependencies
 build/
 
+# SPM
+.build/
+.swiftpm/
+
 # Melos
 .melos_tool/
 pubspec_overrides.yaml
