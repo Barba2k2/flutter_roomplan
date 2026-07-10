@@ -1,3 +1,8 @@
+## 0.2.0
+
+- **Feature(iOS)**: Added Swift Package Manager (SPM) support alongside CocoaPods. Plugin now includes `ios/roomplan_flutter/Package.swift` with FlutterFramework dependency, iOS 16.0 minimum. Sources moved from `ios/Classes/` to `ios/roomplan_flutter/Sources/roomplan_flutter/`. CocoaPods `.podspec` updated to reference new paths.
+- **Chore**: Added `.build/` and `.swiftpm/` to `.gitignore` for SPM artifacts.
+
 ## 0.1.4
 
 - **Feature**: Added automatic room dimensions calculation from floor to ceiling height in `RoomPlanJSONConverter`. The room now includes complete dimensions (length, width, height) derived from wall geometry.
