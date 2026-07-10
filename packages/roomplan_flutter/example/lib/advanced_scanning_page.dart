@@ -541,21 +541,24 @@ class _ConfigurationDialogState extends State<_ConfigurationDialog> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Quality Level',
-                        style: Theme.of(context).textTheme.titleSmall),
+                    Text(
+                      'Quality Level',
+                      style: Theme.of(context).textTheme.titleSmall,
+                    ),
                     const SizedBox(height: 8),
-                    ...ScanQuality.values
-                        .map((quality) => RadioListTile<ScanQuality>(
-                              title: Text(quality.name),
-                              subtitle: Text(quality.description),
-                              value: quality,
-                              groupValue: _config.quality,
-                              onChanged: (value) {
-                                setState(() {
-                                  _config = _config.copyWith(quality: value);
-                                });
-                              },
-                            )),
+                    ...ScanQuality.values.map(
+                      (quality) => RadioListTile<ScanQuality>(
+                        title: Text(quality.name),
+                        subtitle: Text(quality.description),
+                        value: quality,
+                        groupValue: _config.quality,
+                        onChanged: (value) {
+                          setState(() {
+                            _config = _config.copyWith(quality: value);
+                          });
+                        },
+                      ),
+                    ),
                   ],
                 ),
               ),
