@@ -246,7 +246,7 @@ extension ProcessInfo.ThermalState {
 /// - Handling the `RoomCaptureSessionDelegate` events.
 /// - Acting as a `FlutterStreamHandler` to send real-time scan updates to Flutter.
 @available(iOS 16.0, *)
-class RoomPlanController: NSObject, RoomCaptureSessionDelegate, FlutterStreamHandler {
+class RoomPlanController: NSObject, RoomCaptureSessionDelegate, FlutterStreamHandler, UIAdaptivePresentationControllerDelegate {
   /// The shared singleton instance.
   static let shared = RoomPlanController()
 
@@ -290,6 +290,11 @@ class RoomPlanController: NSObject, RoomCaptureSessionDelegate, FlutterStreamHan
 
     let navVC = UINavigationController(rootViewController: vc)
 
+    // Handle swipe-to-dismiss: ensure the Dart Future always completes
+    if #available(iOS 13.0, *) {
+      navVC.presentationController?.delegate = self
+    }
+
     let doneButton = UIBarButtonItem(
       barButtonSystemItem: .done, target: self, action: #selector(doneScanning))
     let cancelButton = UIBarButtonItem(
@@ -298,10 +303,7 @@ class RoomPlanController: NSObject, RoomCaptureSessionDelegate, FlutterStreamHan
     vc.navigationItem.leftBarButtonItem = cancelButton
     vc.navigationItem.title = "Scanning Room..."
 
-    let rootViewController = UIApplication.shared.windows.first(where: \.isKeyWindow)?
-      .rootViewController
-    
-    guard let rootViewController = rootViewController else {
+    guard let rootViewController = getRootViewController() else {
       result(FlutterError(code: "ui_error", message: "Unable to access root view controller.", details: "The app's UI hierarchy might not be properly initialized."))
       return
     }
@@ -309,6 +311,15 @@ class RoomPlanController: NSObject, RoomCaptureSessionDelegate, FlutterStreamHan
     rootViewController.present(navVC, animated: true) { [weak self] in
       self?.startCaptureSession(with: configuration, result: result)
     }
+  }
+
+  /// Returns the root view controller using the modern UIWindowScene API.
+  private func getRootViewController() -> UIViewController? {
+    guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+          let keyWindow = windowScene.windows.first(where: { $0.isKeyWindow }) else {
+      return nil
+    }
+    return keyWindow.rootViewController
   }
   
   /// Starts the actual capture session after UI is presented
@@ -428,9 +439,22 @@ class RoomPlanController: NSObject, RoomCaptureSessionDelegate, FlutterStreamHan
 
   /// Dismisses the presented view controller.
   func dismiss() {
-    let rootViewController = UIApplication.shared.windows.first(where: \.isKeyWindow)?
-      .rootViewController
-    rootViewController?.dismiss(animated: true)
+    guard let rootViewController = getRootViewController() else { return }
+    rootViewController.dismiss(animated: true)
+  }
+
+  // MARK: - UIAdaptivePresentationControllerDelegate
+
+  /// Called when the user swipe-dismisses the scanning UI.
+  /// Ensures the Dart Future always completes instead of hanging forever.
+  public func presentationControllerDidDismiss(_ presentationController: UIPresentationController) {
+    if let result = flutterResult {
+      result(FlutterError(
+        code: "CANCELED",
+        message: "Scan was cancelled by the user.",
+        details: nil))
+      flutterResult = nil
+    }
   }
 
   // MARK: - RoomCaptureSessionDelegate
