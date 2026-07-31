@@ -10,7 +10,7 @@ A Flutter plugin for iOS that provides access to Apple's RoomPlan API, allowing 
                        DESC
   s.homepage         = 'https://github.com/Barba2k2/flutter_roomplan'
   s.license          = { :file => '../LICENSE' }
-  s.author           = { 'PaintPro' => 'suporte@paintpro.com.br' }
+  s.author           = { 'Barba Tech Company' => 'contato@barbatech.company' }
   s.source           = { :path => '.' }
   s.source_files = 'roomplan_flutter/Sources/roomplan_flutter/**/*.swift'
   s.dependency 'Flutter'
