@@ -2,6 +2,11 @@
 ///
 /// This class allows you to customize various aspects of the scanning process
 /// including quality settings, timeout values, and feature detection preferences.
+///
+/// **iOS version support:**
+/// - iOS 16: Only `quality` affects behavior (fast/balanced/high). All other fields
+///   are reserved for iOS 17+ and currently have no effect on the scan.
+/// - iOS 17+: `StructureBuilder` and export options become available (not yet exposed).
 class ScanConfiguration {
   /// The quality level for room scanning.
   final ScanQuality quality;
