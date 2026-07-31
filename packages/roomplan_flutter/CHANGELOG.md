@@ -1,3 +1,13 @@
+## 0.2.1
+
+- **Fix(iOS)**: Handle swipe-to-dismiss on RoomPlan UI via `UIAdaptivePresentationControllerDelegate` — the Dart `Future` from `startScanning()` now always completes instead of hanging forever.
+- **Fix(iOS)**: Replace deprecated `UIApplication.shared.windows` with `UIWindowScene.windows` via `connectedScenes` for root view controller access.
+- **Fix(Dart)**: Add missing `ObjectCategory` values (`television`, `fireplace`, `stairs`, `bathtub`, `dishwasher`) to match the Swift-side enum — previously these objects would return `unknown`.
+- **Fix(Dart)**: Replace 3 duplicate `_listEquals` implementations with `listEquals` from `package:flutter/foundation.dart`.
+- **Docs(Dart)**: Document `ScanConfiguration` limitations — only `quality` is effective on iOS 16; other fields are reserved for iOS 17+.
+- **Refactor(Dart)**: Remove unused `lib/src/models/` dead code (5 files, ~250 lines) with legacy Portuguese strings.
+- **Chore(iOS)**: Bump podspec version to 0.2.1 and replace deprecated `s.swift_version` with `s.swift_versions`.
+
 ## 0.2.0
 
 - **Feature(iOS)**: Added Swift Package Manager (SPM) support alongside CocoaPods. Plugin now includes `ios/roomplan_flutter/Package.swift` with FlutterFramework dependency, iOS 16.0 minimum. Sources moved from `ios/Classes/` to `ios/roomplan_flutter/Sources/roomplan_flutter/`. CocoaPods `.podspec` updated to reference new paths.
