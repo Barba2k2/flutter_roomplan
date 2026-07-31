@@ -14,6 +14,11 @@ enum ObjectCategory {
   refrigerator,
   stove,
   washerDryer,
+  television,
+  fireplace,
+  stairs,
+  bathtub,
+  dishwasher,
   unknown;
   
   /// Creates an [ObjectCategory] from a JSON string.
@@ -42,6 +47,16 @@ enum ObjectCategory {
       case 'washerdryer':
       case 'washer_dryer':
         return ObjectCategory.washerDryer;
+      case 'television':
+        return ObjectCategory.television;
+      case 'fireplace':
+        return ObjectCategory.fireplace;
+      case 'stairs':
+        return ObjectCategory.stairs;
+      case 'bathtub':
+        return ObjectCategory.bathtub;
+      case 'dishwasher':
+        return ObjectCategory.dishwasher;
       default:
         return ObjectCategory.unknown;
     }

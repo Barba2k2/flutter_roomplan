@@ -1,4 +1,5 @@
 import 'package:roomplan_flutter/roomplan_flutter.dart';
+import 'package:flutter/foundation.dart';
 
 /// Represents the complete scanned data of a single room.
 class RoomData {
@@ -112,11 +113,11 @@ class RoomData {
     
     return other is RoomData &&
         other.dimensions == dimensions &&
-        _listEquals(other.walls, walls) &&
-        _listEquals(other.objects, objects) &&
-        _listEquals(other.doors, doors) &&
-        _listEquals(other.windows, windows) &&
-        _listEquals(other.openings, openings) &&
+        listEquals(other.walls, walls) &&
+        listEquals(other.objects, objects) &&
+        listEquals(other.doors, doors) &&
+        listEquals(other.windows, windows) &&
+        listEquals(other.openings, openings) &&
         other.floor == floor &&
         other.ceiling == ceiling;
   }
@@ -140,13 +141,4 @@ class RoomData {
            'windows: ${windows.length}, openings: ${openings.length})';
   }
   
-  /// Helper method to compare lists for equality.
-  bool _listEquals<T>(List<T>? a, List<T>? b) {
-    if (a == null) return b == null;
-    if (b == null || a.length != b.length) return false;
-    for (int index = 0; index < a.length; index += 1) {
-      if (a[index] != b[index]) return false;
-    }
-    return true;
-  }
 }

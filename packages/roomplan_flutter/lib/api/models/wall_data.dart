@@ -1,5 +1,6 @@
 import 'package:roomplan_flutter/roomplan_flutter.dart';
 import 'package:vector_math/vector_math_64.dart';
+import 'package:flutter/foundation.dart';
 
 
 /// Represents a detected wall surface.
@@ -100,11 +101,11 @@ class WallData {
     return other is WallData &&
         other.uuid == uuid &&
         other.position == position &&
-        _listEquals(other.points, points) &&
+        listEquals(other.points, points) &&
         other.width == width &&
         other.height == height &&
         other.confidence == confidence &&
-        _listEquals(other.openings, openings) &&
+        listEquals(other.openings, openings) &&
         other.dimensions == dimensions;
   }
   
@@ -126,13 +127,4 @@ class WallData {
            'height: ${height.toStringAsFixed(2)}, openings: ${openings.length})';
   }
   
-  /// Helper method to compare lists for equality.
-  bool _listEquals<T>(List<T>? a, List<T>? b) {
-    if (a == null) return b == null;
-    if (b == null || a.length != b.length) return false;
-    for (int index = 0; index < a.length; index += 1) {
-      if (a[index] != b[index]) return false;
-    }
-    return true;
-  }
 }

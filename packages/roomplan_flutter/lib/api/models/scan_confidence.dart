@@ -1,3 +1,5 @@
+import 'package:flutter/foundation.dart';
+
 /// Represents the confidence levels of various aspects of the scan.
 ///
 /// Confidence values range from 0.0 (low) to 1.0 (high).
@@ -66,7 +68,7 @@ class ScanConfidence {
         other.overall == overall &&
         other.wallAccuracy == wallAccuracy &&
         other.dimensionAccuracy == dimensionAccuracy &&
-        _listEquals(other.warnings, warnings);
+        listEquals(other.warnings, warnings);
   }
   
   @override
@@ -78,13 +80,4 @@ class ScanConfidence {
            'wallAccuracy: ${(wallAccuracy * 100).toStringAsFixed(1)}%, '
            'dimensionAccuracy: ${(dimensionAccuracy * 100).toStringAsFixed(1)}%)';
   }
-}
-
-bool _listEquals<T>(List<T>? a, List<T>? b) {
-  if (a == null) return b == null;
-  if (b == null || a.length != b.length) return false;
-  for (int index = 0; index < a.length; index += 1) {
-    if (a[index] != b[index]) return false;
-  }
-  return true;
 }
