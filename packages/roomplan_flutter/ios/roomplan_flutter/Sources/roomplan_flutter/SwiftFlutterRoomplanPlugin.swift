@@ -31,8 +31,7 @@ public class SwiftFlutterRoomplanPlugin: NSObject, FlutterPlugin {
   public func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
     switch call.method {
     case "startRoomCapture":
-      let configuration = call.arguments as? [String: Any]
-      RoomPlanController.shared.startSession(with: configuration, result: result)
+      RoomPlanController.shared.startSession(result: result)
     case "stopRoomCapture":
       RoomPlanController.shared.stopSession(result: result)
     case "isSupported":

@@ -40,7 +40,20 @@ struct SerializableRoom: Encodable {
   let dimensions: SerializableVector?
 
   init(from room: CapturedRoom) {
-    self.walls = room.walls.map { SerializableSurface(from: $0) }
+    // iOS 17 Surface.parentIdentifier: door/window/opening -> its wall.
+    func children(_ list: [CapturedRoom.Surface], of wall: CapturedRoom.Surface)
+      -> [SerializableSurface]
+    {
+      list.filter { $0.parentIdentifier == wall.identifier }.map { SerializableSurface(from: $0) }
+    }
+    self.walls = room.walls.map { wall in
+      SerializableSurface(
+        from: wall,
+        doors: children(room.doors, of: wall),
+        windows: children(room.windows, of: wall),
+        openings: children(room.openings, of: wall)
+      )
+    }
     self.objects = room.objects.map { SerializableObject(from: $0) }
     self.doors = room.doors.map { SerializableSurface(from: $0) }
     self.windows = room.windows.map { SerializableSurface(from: $0) }
@@ -153,14 +166,14 @@ struct SerializableRoom: Encodable {
     // Construct serializable surfaces for floor and ceiling
     let floorSurface = SerializableSurface(
       category: "floor",
-      dimensions: simd_float3(length, width, 0.0),
+      dimensions: simd_float3(length, 0.0, width),
       transform: floorTransform,
       confidence: conf
     )
 
     let ceilingSurface = SerializableSurface(
       category: "ceiling",
-      dimensions: simd_float3(length, width, 0.0),
+      dimensions: simd_float3(length, 0.0, width),
       transform: ceilingTransform,
       confidence: conf
     )
@@ -176,13 +189,25 @@ struct SerializableSurface: Encodable {
   let dimensions: SerializableVector
   let transform: [Float]
   let confidence: String
+  /// Only set on walls: the surfaces whose `parentIdentifier` is this wall.
+  var doors: [SerializableSurface]? = nil
+  var windows: [SerializableSurface]? = nil
+  var openings: [SerializableSurface]? = nil
 
-  init(from surface: CapturedRoom.Surface) {
+  init(
+    from surface: CapturedRoom.Surface,
+    doors: [SerializableSurface]? = nil,
+    windows: [SerializableSurface]? = nil,
+    openings: [SerializableSurface]? = nil
+  ) {
     self.uuid = surface.identifier
     self.category = surface.category.description
     self.dimensions = SerializableVector(from: surface.dimensions)
     self.transform = surface.transform.toFloatArray()
     self.confidence = surface.confidence.description
+    self.doors = doors
+    self.windows = windows
+    self.openings = openings
   }
 
   /// Convenience initializer to create synthetic surfaces (e.g., floor/ceiling)

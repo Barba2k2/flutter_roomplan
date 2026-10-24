@@ -242,7 +242,6 @@ class RoomPlanController: NSObject, RoomCaptureSessionDelegate, FlutterStreamHan
   /// The method channel used to communicate with Flutter.
   var channel: FlutterMethodChannel?
   private var roomCaptureView: RoomCaptureView?
-  private var finalResults: CapturedRoom?
   private var flutterResult: FlutterResult?
   private var startTime: Date?
   private var endTime: Date?
@@ -252,13 +251,20 @@ class RoomPlanController: NSObject, RoomCaptureSessionDelegate, FlutterStreamHan
 
   private override init() {}
 
-  /// Starts a new RoomPlan session with optional configuration.
+  /// Starts a new RoomPlan session.
   ///
   /// This method presents the `RoomCaptureView` and starts the scanning process.
   /// The `result` closure is called when the scan is finished or an error occurs.
-  func startSession(with configuration: [String: Any]? = nil, result: @escaping FlutterResult) {
+  func startSession(result: @escaping FlutterResult) {
+    // Ask for camera access on first use; without this the status stays notDetermined forever
+    if AVCaptureDevice.authorizationStatus(for: .video) == .notDetermined {
+      AVCaptureDevice.requestAccess(for: .video) { [weak self] _ in
+        DispatchQueue.main.async { self?.startSession(result: result) }
+      }
+      return
+    }
+
     self.flutterResult = result
-    self.finalResults = nil
 
     // Pre-flight checks with detailed error codes
     do {
@@ -298,7 +304,7 @@ class RoomPlanController: NSObject, RoomCaptureSessionDelegate, FlutterStreamHan
     }
     
     rootViewController.present(navVC, animated: true) { [weak self] in
-      self?.startCaptureSession(with: configuration, result: result)
+      self?.roomCaptureView?.captureSession.run(configuration: RoomCaptureSession.Configuration())
     }
   }
 
@@ -309,47 +315,6 @@ class RoomPlanController: NSObject, RoomCaptureSessionDelegate, FlutterStreamHan
       return nil
     }
     return keyWindow.rootViewController
-  }
-  
-  /// Starts the actual capture session after UI is presented
-  private func startCaptureSession(with configDict: [String: Any]? = nil, result: @escaping FlutterResult) {
-    let configuration = createConfiguration(from: configDict)
-
-    do {
-      roomCaptureView?.captureSession.run(configuration: configuration)
-    } catch {
-      result(FlutterError(code: "session_start_failed", message: "Failed to start capture session.", details: error.localizedDescription))
-    }
-  }
-  
-  /// Creates a RoomCaptureSession.Configuration from Flutter configuration dictionary
-  private func createConfiguration(from configDict: [String: Any]?) -> RoomCaptureSession.Configuration {
-    let configuration = RoomCaptureSession.Configuration()
-    
-    guard let configDict = configDict else {
-      return configuration
-    }
-    
-    // Apply quality settings
-    if let qualityString = configDict["quality"] as? String {
-      switch qualityString {
-      case "fast":
-        // Optimize for speed - disable some features if possible
-        break
-      case "high":
-        // Optimize for accuracy - enable all features
-        break
-      case "balanced":
-        // Default balanced settings
-        break
-      default:
-        break
-      }
-    }
-    
-    // Note: the options above do not change the native configuration yet; the default is returned
-    
-    return configuration
   }
   
   /// Performs comprehensive pre-flight checks before starting a scan
@@ -403,9 +368,9 @@ class RoomPlanController: NSObject, RoomCaptureSessionDelegate, FlutterStreamHan
   }
 
   /// Called when the user taps the 'Done' button in the scanning UI.
+  /// The view is dismissed in `didEndWith`, after RoomBuilder finishes processing.
   @objc func doneScanning() {
     roomCaptureView?.captureSession.stop()
-    dismiss()
   }
 
   /// Called when the user taps the 'Cancel' button in the scanning UI.
@@ -443,8 +408,6 @@ class RoomPlanController: NSObject, RoomCaptureSessionDelegate, FlutterStreamHan
   // MARK: - RoomCaptureSessionDelegate
   /// Called when the room layout is updated during a scan.
   public func captureSession(_ session: RoomCaptureSession, didUpdate room: CapturedRoom) {
-    finalResults = room
-
     if let eventSink = eventSink {
       // Go to a background thread to do the heavy encoding work
       DispatchQueue.global(qos: .userInitiated).async {
@@ -474,15 +437,7 @@ class RoomPlanController: NSObject, RoomCaptureSessionDelegate, FlutterStreamHan
     endTime = Date()
 
     if let error = error {
-      flutterResult?(
-        FlutterError(code: "native_error", message: error.localizedDescription, details: nil))
-      return
-    }
-
-    guard let finalResults = finalResults else {
-      flutterResult?(
-        FlutterError(code: "data_not_found", message: "Final scan data is missing.", details: nil)
-      )
+      finish(FlutterError(code: "native_error", message: error.localizedDescription, details: nil))
       return
     }
 
@@ -496,16 +451,32 @@ class RoomPlanController: NSObject, RoomCaptureSessionDelegate, FlutterStreamHan
         "has_lidar": hasLidar,
       ] as [String: Any]
 
-    do {
-      let json = try RoomPlanJSONConverter.convertToJSON(
-        capturedRoom: finalResults, metadata: metadata)
-      flutterResult?(json)
-    } catch {
-      flutterResult?(
-        FlutterError(
-          code: "serialization_error", message: "Failed to serialize final room data.",
-          details: error.localizedDescription))
+    // Final processing of the raw capture data; runs off the main thread
+    Task.detached(priority: .userInitiated) { [weak self] in
+      let payload: Any
+      do {
+        let room = try await RoomBuilder(options: [.beautifyObjects]).capturedRoom(from: data)
+        do {
+          payload = try RoomPlanJSONConverter.convertToJSON(capturedRoom: room, metadata: metadata)
+        } catch {
+          payload = FlutterError(
+            code: "serialization_error", message: "Failed to serialize final room data.",
+            details: error.localizedDescription)
+        }
+      } catch {
+        payload = FlutterError(
+          code: "processing_failed", message: "Failed to process captured room data.",
+          details: error.localizedDescription)
+      }
+      await MainActor.run { self?.finish(payload) }
     }
+  }
+
+  /// Sends the final result to Flutter once, then dismisses the scanning UI.
+  private func finish(_ payload: Any) {
+    flutterResult?(payload)
+    flutterResult = nil
+    dismiss()
   }
 
   /// Called when the scanning session starts.
