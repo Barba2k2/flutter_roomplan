@@ -42,10 +42,7 @@ with dimensions, 3D positions, transforms, and confidence levels.
 
 ### Silent Failures
 
-6. **`ScanConfiguration` fields ignored on native side**  
-   `detectFurniture`, `detectDoors`, `detectWindows`, `minimumConfidence`,
-   `enableAdvancedSurfaceDetection`, `timeoutSeconds`, `enableRealtimeUpdates` — ALL
-   silently ignored. `createConfiguration()` returns a default config with a comment saying the options are not applied yet. Client expects them to work.
+6. **Scan configuration class removed** (0.3.0): none of its fields reached the native side.
 
 ### Thread Safety
 
@@ -82,7 +79,7 @@ with dimensions, 3D positions, transforms, and confidence levels.
 - [x] Add missing `ObjectCategory` values (television, fireplace, stairs, bathtub, dishwasher)
 - [x] Fix `flutterResult` leak on dismiss (add `UIAdaptivePresentationControllerDelegate`)
 - [x] Fix deprecated `UIApplication.shared.windows` → `UIWindowScene`
-- [x] Document `ScanConfiguration` limitations clearly in Dartdoc
+- [x] Remove the scan configuration class (no field was applied natively)
 
 ### Phase 2 — Cleanup
 - [x] Remove `lib/src/models/` dead code (5 files, ~250 lines)

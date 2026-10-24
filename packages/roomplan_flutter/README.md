@@ -162,23 +162,6 @@ if (!isSupported) {
 }
 ```
 
-### Scan Configuration
-
-You can customize the scanning behavior using `ScanConfiguration`:
-
-```dart
-final config = ScanConfiguration(
-  quality: ScanQuality.accurate,  // fast, balanced, accurate
-  timeoutSeconds: 300,           // 5 minute timeout
-  enableRealtimeUpdates: true,   // Real-time scan updates
-  detectFurniture: true,         // Include furniture detection
-  detectDoors: true,             // Include door detection
-  detectWindows: true,           // Include window detection
-);
-
-final result = await _roomScanner.startScanning(configuration: config);
-```
-
 ### Unit System Support
 
 The package supports both metric and imperial measurement units:
@@ -325,14 +308,12 @@ The plugin returns a `ScanResult` object, which contains a tree of structured da
 - `ScanMetadata`: Contains metadata about the scanning session.
 
   - `scanDuration`: A `Duration` object.
-  - `scanDate`: The `DateTime` when the scan started.
   - `deviceModel`: The model of the device (e.g., "iPhone14,3").
   - `hasLidar`: A boolean indicating if the device has a LiDAR sensor.
 
 - `ScanConfidence`: Contains confidence values for different aspects of the scan.
   - `overall`: A `double` from 0.0 to 1.0.
   - `wallAccuracy`: A `double` for the accuracy of wall detection.
-  - `dimensionAccuracy`: A `double` for the accuracy of measurements.
 
 Refer to the source code for detailed information on all fields.
 
@@ -383,7 +364,7 @@ Refer to the source code for detailed information on all fields.
 
 #### Instance Methods
 
-- `Future<ScanResult?> startScanning({ScanConfiguration? configuration})` - Begin a room scanning session with optional configuration
+- `Future<ScanResult?> startScanning()` - Begin a room scanning session
 - `Future<void> stopScanning()` - Stop the current scanning session
 - `void dispose()` - Clean up resources
 
@@ -391,20 +372,14 @@ Refer to the source code for detailed information on all fields.
 
 - `Stream<ScanResult?> onScanResult` - Stream of real-time scan updates
 
-### ScanConfiguration
+### PaintableAreaHelper
 
-- `quality`: `ScanQuality.fast` | `.balanced` | `.accurate`
-- `timeoutSeconds`: Optional timeout in seconds
-- `enableRealtimeUpdates`: Enable real-time scan updates
-- `detectFurniture`: Include furniture in scan results
-- `detectDoors`: Include doors in scan results
-- `detectWindows`: Include windows in scan results
+Static helpers, areas in m²:
 
-#### Preset Configurations
-
-- `ScanConfiguration.fast()`: Quick scanning with basic features
-- `ScanConfiguration.accurate()`: High-quality scanning with all features
-- `ScanConfiguration.minimal()`: Minimal scanning for testing
+- `grossArea(WallData wall)` — `width * height`.
+- `openingsArea(WallData wall, OpeningType type)` — sum of that wall's nested doors, windows or openings.
+- `storageAreaByWall(List<WallData> walls, List<ObjectData> objects)` — wall uuid → area covered by `ObjectCategory.storage` objects within 0.3 m of the wall (nearest wall wins; extent along the wall × min(object, wall height)). Other categories are ignored.
+- `paintableArea(WallData wall, {double storageArea = 0})` — gross minus all openings minus `storageArea`, never below 0.
 
 ### MeasurementUnit
 
