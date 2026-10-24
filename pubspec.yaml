@@ -3,7 +3,52 @@ description: Monorepo workspace for Flutter plugins wrapping Apple camera, visio
 publish_to: none
 
 environment:
-  sdk: ^3.0.0
+  sdk: ^3.6.0
+
+workspace:
+  - packages/roomplan_flutter
+  - packages/roomplan_flutter/example
 
 dev_dependencies:
-  melos: ^6.3.0
+  melos: ^8.9.0
+
+melos:
+  repository: https://github.com/Barba2k2/flutter_roomplan
+
+  ide:
+    intellij:
+      enabled: false
+
+  command:
+    bootstrap:
+      runPubGetInParallel: false
+    version:
+      workspaceChangelog: false
+      updateGitTagRefs: true
+      linkToCommits: true
+      branch: main
+
+  scripts:
+    analyze:
+      description: Run `dart analyze` across all packages.
+      run: melos exec -c 1 -- "dart analyze ."
+
+    format:
+      description: Format Dart code across all packages.
+      run: melos exec -c 1 -- "dart format ."
+
+    format-check:
+      description: Verify formatting without writing changes (CI).
+      run: melos exec -c 1 -- "dart format --set-exit-if-changed ."
+
+    test:
+      description: Run Flutter tests in every package that has a `test/` directory.
+      run: melos exec -c 1 --dir-exists=test -- "flutter test"
+
+    clean:
+      description: Run `flutter clean` in every package.
+      run: melos exec -c 1 -- "flutter clean"
+
+    pub-get:
+      description: Run `flutter pub get` in every package.
+      run: melos exec -c 1 -- "flutter pub get"
