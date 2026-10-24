@@ -11,7 +11,7 @@ abstract class RoomPlanException implements Exception {
 class RoomPlanNotAvailableException extends RoomPlanException {
   RoomPlanNotAvailableException()
       : super(
-          'RoomPlan is not available on this device. Requires a device with LiDAR sensor and iOS 16 or newer.',
+          'RoomPlan is not available on this device. Requires a device with LiDAR sensor and iOS 17 or newer.',
         );
 }
 
@@ -53,12 +53,6 @@ class NativeChannelException extends RoomPlanException {
 /// Thrown when there is an error parsing JSON data.
 class DataParsingException extends RoomPlanException {
   DataParsingException(String details) : super('Error parsing data: $details');
-}
-
-/// Thrown when the iOS version is not supported.
-class UnsupportedVersionException extends RoomPlanException {
-  UnsupportedVersionException()
-      : super('iOS 16.0 or later is required for RoomPlan functionality.');
 }
 
 /// Thrown when camera permission is not yet determined.

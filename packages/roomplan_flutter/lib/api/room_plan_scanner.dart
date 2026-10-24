@@ -22,7 +22,7 @@ class RoomPlanScanner {
 
   /// Checks if RoomPlan is supported on the current device.
   ///
-  /// Returns true if the device is running iOS 16+ and has LiDAR support.
+  /// Returns true if the device is running iOS 17+ and has LiDAR support.
   static Future<bool> isSupported() async {
     return RoomPlanChannel.isSupported();
   }

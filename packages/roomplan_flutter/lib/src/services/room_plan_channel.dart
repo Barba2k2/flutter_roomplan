@@ -122,8 +122,6 @@ class RoomPlanChannel {
         case 'not_available':
         case 'roomplan_not_supported':
           throw RoomPlanNotAvailableException();
-        case 'unsupported_version':
-          throw UnsupportedVersionException();
         case 'arkit_not_supported':
           throw ARKitNotSupportedException();
         case 'insufficient_hardware':
