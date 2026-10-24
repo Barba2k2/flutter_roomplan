@@ -24,7 +24,11 @@ class HomePage extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.view_in_ar, size: 80, color: Colors.blue.shade600),
+                  Icon(
+                    Icons.view_in_ar,
+                    size: 80,
+                    color: Colors.blue.shade600,
+                  ),
                   const SizedBox(height: 24),
                   Text(
                     'RoomPlan Scanner',
@@ -48,10 +52,12 @@ class HomePage extends StatelessWidget {
                   ElevatedButton.icon(
                     onPressed: () {
                       viewModel.navigateToScannerPage(
-                          context); // Call ViewModel method
+                        context,
+                      ); // Call ViewModel method
                       Navigator.of(context).push(
                         MaterialPageRoute(
-                            builder: (context) => const ScannerPage()),
+                          builder: (context) => const ScannerPage(),
+                        ),
                       );
                     },
                     icon: const Icon(Icons.camera_alt_rounded),
@@ -97,7 +103,7 @@ class HomePage extends StatelessWidget {
                         Text(
                           viewModel.isRoomPlanSupported
                               ? 'RoomPlan is supported on this device.'
-                              : 'RoomPlan is NOT supported on this device. Requires iOS 16+ and LiDAR.',
+                              : 'RoomPlan is NOT supported on this device. Requires iOS 17+ and LiDAR.',
                           style: TextStyle(
                             color: viewModel.isRoomPlanSupported
                                 ? Colors.green.shade700
