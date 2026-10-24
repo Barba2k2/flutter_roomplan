@@ -94,7 +94,7 @@ New packages follow the same shape under `packages/<package_name>/`.
 
 ## Versioning and publishing
 
-Each package is versioned **independently** and published to pub.dev under its own name. Git tags use the `<package_name>-v<version>` convention (e.g. `roomplan_flutter-v0.2.0`) so a single repo can ship many releases without ambiguity.
+Each package is versioned **independently** and published to pub.dev under its own name. Git tags use the `<package_name>-v<version>` convention (e.g. `roomplan_flutter-v0.3.0`) so a single repo can ship many releases without ambiguity.
 
 Releases are driven by Melos (`melos version`, `melos publish`). See [`CONTRIBUTING.md`](CONTRIBUTING.md) for the full release flow.
 
