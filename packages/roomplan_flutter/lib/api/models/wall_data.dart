@@ -2,7 +2,6 @@ import 'package:roomplan_flutter/roomplan_flutter.dart';
 import 'package:vector_math/vector_math_64.dart';
 import 'package:flutter/foundation.dart';
 
-
 /// Represents a detected wall surface.
 class WallData {
   /// A unique identifier for the wall.
@@ -44,21 +43,24 @@ class WallData {
     this.dimensions,
     this.transform,
   });
-  
+
   /// Creates a [WallData] from a JSON map.
   factory WallData.fromJson(Map<String, dynamic> json) {
     return WallData(
       uuid: json['uuid'] as String? ?? '',
-      position: Position.fromJson(json['position'] as Map<String, dynamic>? ?? {}),
+      position:
+          Position.fromJson(json['position'] as Map<String, dynamic>? ?? {}),
       points: (json['points'] as List<dynamic>?)
-          ?.map((e) => Position.fromJson(e as Map<String, dynamic>))
-          .toList() ?? [],
+              ?.map((e) => Position.fromJson(e as Map<String, dynamic>))
+              .toList() ??
+          [],
       width: (json['width'] as num?)?.toDouble() ?? 0.0,
       height: (json['height'] as num?)?.toDouble() ?? 0.0,
       confidence: Confidence.fromJson(json['confidence'] as String? ?? 'low'),
       openings: (json['openings'] as List<dynamic>?)
-          ?.map((e) => OpeningData.fromJson(e as Map<String, dynamic>))
-          .toList() ?? [],
+              ?.map((e) => OpeningData.fromJson(e as Map<String, dynamic>))
+              .toList() ??
+          [],
       dimensions: json['dimensions'] != null
           ? RoomDimensions.fromJson(json['dimensions'] as Map<String, dynamic>)
           : null,
@@ -67,7 +69,7 @@ class WallData {
           : null,
     );
   }
-  
+
   /// Converts this [WallData] to a JSON map.
   Map<String, dynamic> toJson() {
     return {
@@ -82,22 +84,22 @@ class WallData {
       'transform': transform != null ? _matrixToJson(transform!) : null,
     };
   }
-  
+
   /// Helper method to convert Matrix4 to JSON-serializable list.
   static List<double> _matrixToJson(Matrix4 matrix) {
     return matrix.storage.toList();
   }
-  
+
   /// Helper method to convert JSON list to Matrix4.
   static Matrix4 _matrixFromJson(List<dynamic> data) {
     final storage = data.cast<double>();
     return Matrix4.fromList(storage);
   }
-  
+
   @override
   bool operator ==(Object other) {
     if (identical(this, other)) return true;
-    
+
     return other is WallData &&
         other.uuid == uuid &&
         other.position == position &&
@@ -108,23 +110,22 @@ class WallData {
         listEquals(other.openings, openings) &&
         other.dimensions == dimensions;
   }
-  
+
   @override
   int get hashCode => Object.hash(
-    uuid,
-    position,
-    points,
-    width,
-    height,
-    confidence,
-    openings,
-    dimensions,
-  );
-  
+        uuid,
+        position,
+        points,
+        width,
+        height,
+        confidence,
+        openings,
+        dimensions,
+      );
+
   @override
   String toString() {
     return 'WallData(uuid: $uuid, width: ${width.toStringAsFixed(2)}, '
-           'height: ${height.toStringAsFixed(2)}, openings: ${openings.length})';
+        'height: ${height.toStringAsFixed(2)}, openings: ${openings.length})';
   }
-  
 }

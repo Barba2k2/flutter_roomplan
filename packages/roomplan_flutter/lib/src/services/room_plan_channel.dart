@@ -10,19 +10,19 @@ import 'package:roomplan_flutter/roomplan_flutter.dart';
 class RoomPlanChannel {
   final MethodChannel _channel;
   final EventChannel _eventChannel;
-  
+
   // Performance optimization: Use single subscription controllers to reduce memory overhead
   final StreamController<Map<String, dynamic>> _scanResultController =
       StreamController<Map<String, dynamic>>();
 
   final StreamController<dynamic> _scanUpdateController =
       StreamController<dynamic>();
-      
+
   // Performance optimization: Stream subscription management
   StreamSubscription<dynamic>? _eventSubscription;
   Timer? _cleanupTimer;
   bool _isDisposed = false;
-  
+
   // Performance optimization: Stream caching to avoid repeated broadcast stream creation
   Stream<Map<String, dynamic>>? _cachedScanResultStream;
   Stream<dynamic>? _cachedScanUpdateStream;
@@ -33,7 +33,8 @@ class RoomPlanChannel {
     if (_isDisposed) {
       throw StateError('RoomPlanChannel has been disposed');
     }
-    return _cachedScanResultStream ??= _scanResultController.stream.asBroadcastStream();
+    return _cachedScanResultStream ??=
+        _scanResultController.stream.asBroadcastStream();
   }
 
   /// A stream for real-time updates during an active scan.
@@ -42,7 +43,8 @@ class RoomPlanChannel {
     if (_isDisposed) {
       throw StateError('RoomPlanChannel has been disposed');
     }
-    return _cachedScanUpdateStream ??= _scanUpdateController.stream.asBroadcastStream();
+    return _cachedScanUpdateStream ??=
+        _scanUpdateController.stream.asBroadcastStream();
   }
 
   /// Creates a [RoomPlanChannel].
@@ -56,11 +58,11 @@ class RoomPlanChannel {
     _initializeEventListener();
     _scheduleCleanupTimer();
   }
-  
+
   /// Performance optimization: Initialize event listener with proper error handling and cleanup
   void _initializeEventListener() {
     if (_isDisposed) return;
-    
+
     _eventSubscription = _eventChannel.receiveBroadcastStream().listen(
       (event) {
         if (!_isDisposed && !_scanUpdateController.isClosed) {
@@ -75,7 +77,7 @@ class RoomPlanChannel {
       cancelOnError: false,
     );
   }
-  
+
   /// Performance optimization: Schedule automatic cleanup after inactivity
   void _scheduleCleanupTimer() {
     _cleanupTimer?.cancel();
@@ -85,11 +87,11 @@ class RoomPlanChannel {
       }
     });
   }
-  
+
   /// Performance optimization: Periodic maintenance to free unused resources
   void _performMaintenanceCleanup() {
     if (_isDisposed) return;
-    
+
     // Reset cached streams if no active listeners
     if (_cachedScanResultStream != null && !_scanResultController.hasListener) {
       _cachedScanResultStream = null;
@@ -97,7 +99,7 @@ class RoomPlanChannel {
     if (_cachedScanUpdateStream != null && !_scanUpdateController.hasListener) {
       _cachedScanUpdateStream = null;
     }
-    
+
     // Schedule next cleanup
     _scheduleCleanupTimer();
   }
@@ -171,18 +173,21 @@ class RoomPlanChannel {
     try {
       await _channel.invokeMethod('stopRoomCapture');
     } on PlatformException catch (e) {
-      throw NativeChannelException('Failed to stop scan: ${e.code}: ${e.message}');
+      throw NativeChannelException(
+          'Failed to stop scan: ${e.code}: ${e.message}');
     } catch (e) {
-      throw RoomPlanScanningErrorException('Unexpected error stopping scan: $e');
+      throw RoomPlanScanningErrorException(
+          'Unexpected error stopping scan: $e');
     }
   }
 
   static Future<bool> isSupported() async {
     if (!Platform.isIOS) return false;
-    
+
     try {
       // Directly use the MethodChannel for this static method
-      const MethodChannel staticChannel = MethodChannel('roomplan_flutter/method_channel');
+      const MethodChannel staticChannel =
+          MethodChannel('roomplan_flutter/method_channel');
       final result = await staticChannel.invokeMethod('isSupported');
       return result as bool? ?? false;
     } catch (e) {
@@ -195,15 +200,15 @@ class RoomPlanChannel {
   void dispose() {
     if (_isDisposed) return;
     _isDisposed = true;
-    
+
     // Cancel timers and subscriptions
     _cleanupTimer?.cancel();
     _eventSubscription?.cancel();
-    
+
     // Clear cached streams
     _cachedScanResultStream = null;
     _cachedScanUpdateStream = null;
-    
+
     // Close controllers
     if (!_scanResultController.isClosed) {
       _scanResultController.close();

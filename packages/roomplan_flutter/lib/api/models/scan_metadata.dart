@@ -1,4 +1,3 @@
-
 /// Contains metadata about the scanning session.
 class ScanMetadata {
   /// The date and time when the scan was initiated.
@@ -20,21 +19,23 @@ class ScanMetadata {
     required this.deviceModel,
     required this.hasLidar,
   });
-  
+
   /// Creates a [ScanMetadata] from a JSON map.
   factory ScanMetadata.fromJson(Map<String, dynamic> json) {
     return ScanMetadata(
-      scanDate: json['scanDate'] != null 
+      scanDate: json['scanDate'] != null
           ? DateTime.parse(json['scanDate'] as String)
           : DateTime.now(),
       scanDuration: Duration(
-        microseconds: ((json['scanDuration'] as num?)?.toDouble() ?? 0.0 * 1000000).round(),
+        microseconds:
+            ((json['scanDuration'] as num?)?.toDouble() ?? 0.0 * 1000000)
+                .round(),
       ),
       deviceModel: json['deviceModel'] as String? ?? 'Unknown',
       hasLidar: json['hasLidar'] as bool? ?? false,
     );
   }
-  
+
   /// Converts this [ScanMetadata] to a JSON map.
   Map<String, dynamic> toJson() {
     return {
@@ -44,7 +45,7 @@ class ScanMetadata {
       'hasLidar': hasLidar,
     };
   }
-  
+
   /// Creates a copy of this metadata with modified values.
   ScanMetadata copyWith({
     DateTime? scanDate,
@@ -59,26 +60,27 @@ class ScanMetadata {
       hasLidar: hasLidar ?? this.hasLidar,
     );
   }
-  
+
   @override
   bool operator ==(Object other) {
     if (identical(this, other)) return true;
-    
+
     return other is ScanMetadata &&
         other.scanDate == scanDate &&
         other.scanDuration == scanDuration &&
         other.deviceModel == deviceModel &&
         other.hasLidar == hasLidar;
   }
-  
+
   @override
-  int get hashCode => Object.hash(scanDate, scanDuration, deviceModel, hasLidar);
-  
+  int get hashCode =>
+      Object.hash(scanDate, scanDuration, deviceModel, hasLidar);
+
   @override
   String toString() {
     return 'ScanMetadata(scanDate: $scanDate, '
-           'scanDuration: ${scanDuration.inSeconds}s, '
-           'deviceModel: $deviceModel, '
-           'hasLidar: $hasLidar)';
+        'scanDuration: ${scanDuration.inSeconds}s, '
+        'deviceModel: $deviceModel, '
+        'hasLidar: $hasLidar)';
   }
 }

@@ -39,7 +39,7 @@ class RoomData {
     this.floor,
     this.ceiling,
   });
-  
+
   /// Creates a [RoomData] from a JSON map.
   factory RoomData.fromJson(Map<String, dynamic> json) {
     return RoomData(
@@ -47,20 +47,25 @@ class RoomData {
           ? RoomDimensions.fromJson(json['dimensions'] as Map<String, dynamic>)
           : null,
       walls: (json['walls'] as List<dynamic>?)
-          ?.map((e) => WallData.fromJson(e as Map<String, dynamic>))
-          .toList() ?? [],
+              ?.map((e) => WallData.fromJson(e as Map<String, dynamic>))
+              .toList() ??
+          [],
       objects: (json['objects'] as List<dynamic>?)
-          ?.map((e) => ObjectData.fromJson(e as Map<String, dynamic>))
-          .toList() ?? [],
+              ?.map((e) => ObjectData.fromJson(e as Map<String, dynamic>))
+              .toList() ??
+          [],
       doors: (json['doors'] as List<dynamic>?)
-          ?.map((e) => OpeningData.fromJson(e as Map<String, dynamic>))
-          .toList() ?? [],
+              ?.map((e) => OpeningData.fromJson(e as Map<String, dynamic>))
+              .toList() ??
+          [],
       windows: (json['windows'] as List<dynamic>?)
-          ?.map((e) => OpeningData.fromJson(e as Map<String, dynamic>))
-          .toList() ?? [],
+              ?.map((e) => OpeningData.fromJson(e as Map<String, dynamic>))
+              .toList() ??
+          [],
       openings: (json['openings'] as List<dynamic>?)
-          ?.map((e) => OpeningData.fromJson(e as Map<String, dynamic>))
-          .toList() ?? [],
+              ?.map((e) => OpeningData.fromJson(e as Map<String, dynamic>))
+              .toList() ??
+          [],
       floor: json['floor'] != null
           ? WallData.fromJson(json['floor'] as Map<String, dynamic>)
           : null,
@@ -69,7 +74,7 @@ class RoomData {
           : null,
     );
   }
-  
+
   /// Converts this [RoomData] to a JSON map.
   Map<String, dynamic> toJson() {
     return {
@@ -83,7 +88,7 @@ class RoomData {
       'ceiling': ceiling?.toJson(),
     };
   }
-  
+
   /// Creates a copy of this room data with modified values.
   RoomData copyWith({
     RoomDimensions? dimensions,
@@ -106,11 +111,11 @@ class RoomData {
       ceiling: ceiling ?? this.ceiling,
     );
   }
-  
+
   @override
   bool operator ==(Object other) {
     if (identical(this, other)) return true;
-    
+
     return other is RoomData &&
         other.dimensions == dimensions &&
         listEquals(other.walls, walls) &&
@@ -121,24 +126,23 @@ class RoomData {
         other.floor == floor &&
         other.ceiling == ceiling;
   }
-  
+
   @override
   int get hashCode => Object.hash(
-    dimensions,
-    walls,
-    objects,
-    doors,
-    windows,
-    openings,
-    floor,
-    ceiling,
-  );
-  
+        dimensions,
+        walls,
+        objects,
+        doors,
+        windows,
+        openings,
+        floor,
+        ceiling,
+      );
+
   @override
   String toString() {
     return 'RoomData(dimensions: $dimensions, walls: ${walls.length}, '
-           'objects: ${objects.length}, doors: ${doors.length}, '
-           'windows: ${windows.length}, openings: ${openings.length})';
+        'objects: ${objects.length}, doors: ${doors.length}, '
+        'windows: ${windows.length}, openings: ${openings.length})';
   }
-  
 }

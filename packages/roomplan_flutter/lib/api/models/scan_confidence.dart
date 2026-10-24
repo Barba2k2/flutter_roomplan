@@ -24,17 +24,18 @@ class ScanConfidence {
     required this.dimensionAccuracy,
     this.warnings = const [],
   });
-  
+
   /// Creates a [ScanConfidence] from a JSON map.
   factory ScanConfidence.fromJson(Map<String, dynamic> json) {
     return ScanConfidence(
       overall: (json['overall'] as num?)?.toDouble() ?? 0.0,
       wallAccuracy: (json['wallAccuracy'] as num?)?.toDouble() ?? 0.0,
       dimensionAccuracy: (json['dimensionAccuracy'] as num?)?.toDouble() ?? 0.0,
-      warnings: (json['warnings'] as List<dynamic>?)?.cast<String>() ?? const [],
+      warnings:
+          (json['warnings'] as List<dynamic>?)?.cast<String>() ?? const [],
     );
   }
-  
+
   /// Converts this [ScanConfidence] to a JSON map.
   Map<String, dynamic> toJson() {
     return {
@@ -44,7 +45,7 @@ class ScanConfidence {
       'warnings': warnings,
     };
   }
-  
+
   /// Creates a copy of this confidence with modified values.
   ScanConfidence copyWith({
     double? overall,
@@ -59,25 +60,26 @@ class ScanConfidence {
       warnings: warnings ?? this.warnings,
     );
   }
-  
+
   @override
   bool operator ==(Object other) {
     if (identical(this, other)) return true;
-    
+
     return other is ScanConfidence &&
         other.overall == overall &&
         other.wallAccuracy == wallAccuracy &&
         other.dimensionAccuracy == dimensionAccuracy &&
         listEquals(other.warnings, warnings);
   }
-  
+
   @override
-  int get hashCode => Object.hash(overall, wallAccuracy, dimensionAccuracy, warnings);
-  
+  int get hashCode =>
+      Object.hash(overall, wallAccuracy, dimensionAccuracy, warnings);
+
   @override
   String toString() {
     return 'ScanConfidence(overall: ${(overall * 100).toStringAsFixed(1)}%, '
-           'wallAccuracy: ${(wallAccuracy * 100).toStringAsFixed(1)}%, '
-           'dimensionAccuracy: ${(dimensionAccuracy * 100).toStringAsFixed(1)}%)';
+        'wallAccuracy: ${(wallAccuracy * 100).toStringAsFixed(1)}%, '
+        'dimensionAccuracy: ${(dimensionAccuracy * 100).toStringAsFixed(1)}%)';
   }
 }

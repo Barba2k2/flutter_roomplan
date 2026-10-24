@@ -16,10 +16,11 @@ class Position {
 
   /// Creates a [Position] from a [Vector3].
   const Position(this.vector);
-  
+
   /// Creates a [Position] from coordinates.
-  Position.fromCoordinates(double x, double y, double z) : vector = Vector3(x, y, z);
-  
+  Position.fromCoordinates(double x, double y, double z)
+      : vector = Vector3(x, y, z);
+
   /// Creates a [Position] from a JSON map.
   factory Position.fromJson(Map<String, dynamic> json) {
     return Position.fromCoordinates(
@@ -28,7 +29,7 @@ class Position {
       (json['z'] as num?)?.toDouble() ?? 0.0,
     );
   }
-  
+
   /// Converts this [Position] to a JSON map.
   Map<String, dynamic> toJson() {
     return {
@@ -37,16 +38,17 @@ class Position {
       'z': z,
     };
   }
-  
+
   @override
   bool operator ==(Object other) {
     if (identical(this, other)) return true;
     return other is Position && other.vector == vector;
   }
-  
+
   @override
   int get hashCode => vector.hashCode;
-  
+
   @override
-  String toString() => 'Position(x: ${x.toStringAsFixed(2)}, y: ${y.toStringAsFixed(2)}, z: ${z.toStringAsFixed(2)})';
+  String toString() =>
+      'Position(x: ${x.toStringAsFixed(2)}, y: ${y.toStringAsFixed(2)}, z: ${z.toStringAsFixed(2)})';
 }

@@ -33,24 +33,24 @@ class RoomPlanScanner {
   /// Performance optimization: Lazy stream initialization and efficient error handling.
   factory RoomPlanScanner({RoomPlanChannel? roomPlanChannel}) {
     final channel = roomPlanChannel ?? RoomPlanChannel();
-    
+
     // Performance optimization: Use lazy stream transformation to avoid unnecessary processing
     final onScanResult = channel.scanUpdateStream
         .where((result) => result is String)
         .map<ScanResult?>((result) {
-          try {
-            return parseScanResult(result as String);
-          } catch (e, stacktrace) {
-            // Performance optimization: Only print debug info in debug mode
-            assert(() {
-              debugPrint('Error parsing scan update: $e');
-              debugPrint(stacktrace.toString());
-              return true;
-            }());
-            return null;
-          }
-        });
-    
+      try {
+        return parseScanResult(result as String);
+      } catch (e, stacktrace) {
+        // Performance optimization: Only print debug info in debug mode
+        assert(() {
+          debugPrint('Error parsing scan update: $e');
+          debugPrint(stacktrace.toString());
+          return true;
+        }());
+        return null;
+      }
+    });
+
     return RoomPlanScanner._(channel, onScanResult);
   }
 
@@ -62,7 +62,8 @@ class RoomPlanScanner {
   /// Returns a [ScanResult] upon completion, or null if the scan
   /// is cancelled or fails.
   Future<ScanResult?> startScanning({ScanConfiguration? configuration}) async {
-    final result = await _channel.startRoomCapture(configuration: configuration);
+    final result =
+        await _channel.startRoomCapture(configuration: configuration);
     if (result is String) {
       return parseScanResult(result);
     }
