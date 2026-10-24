@@ -88,7 +88,9 @@ class _TopBannerState extends State<TopBanner>
                     Expanded(
                       child: Text(
                         widget.message,
-                        style: TextStyle(color: colors.onPrimaryContainer),
+                        style: TextStyle(
+                          color: colors.onPrimaryContainer,
+                        ),
                       ),
                     ),
                   ],
