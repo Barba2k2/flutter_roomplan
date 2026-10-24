@@ -105,10 +105,9 @@ class RoomPlanChannel {
   }
 
   /// Calls the native side to start a room scanning session.
-  Future<dynamic> startRoomCapture({ScanConfiguration? configuration}) async {
+  Future<dynamic> startRoomCapture() async {
     try {
-      final arguments = configuration?.toMap();
-      return await _channel.invokeMethod('startRoomCapture', arguments);
+      return await _channel.invokeMethod('startRoomCapture');
     } on PlatformException catch (e) {
       switch (e.code) {
         case 'camera_permission_denied':
