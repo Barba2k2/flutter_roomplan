@@ -76,7 +76,7 @@ Naming convention: `flutter_<framework>` for new packages (e.g. `flutter_object_
 
 ## Releasing
 
-Each package is versioned independently. Tags follow the pattern `<package_name>-v<version>` (e.g. `roomplan_flutter-v0.1.5`).
+Each package is versioned independently. Tags follow the pattern `<package_name>-v<version>` (e.g. `roomplan_flutter-v0.3.0`).
 
 ```bash
 # Stage release commits and bump versions based on conventional commits

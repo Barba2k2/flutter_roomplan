@@ -36,7 +36,7 @@ Consumers can choose either path:
 ```yaml
 # Option A: only what I need
 dependencies:
-  roomplan_flutter: ^0.2.0
+  roomplan_flutter: ^0.3.0
 
 # Option B: the whole family in one import
 dependencies:
@@ -96,7 +96,7 @@ flutter_roomplan/                 # repo root
 | New plugin packages | `flutter_<framework>` | `flutter_object_capture` |
 | Legacy / pre-existing | preserved as-is | `roomplan_flutter` |
 | Umbrella package | `apple_camera_kit` | — |
-| Git tags | `<package_name>-v<version>` | `roomplan_flutter-v0.1.5` |
+| Git tags | `<package_name>-v<version>` | `roomplan_flutter-v0.3.0` |
 | Branches | `feat\|fix\|chore/<package>/<slug>` | `feat/object_capture/initial-skeleton` |
 | Issue labels | `pkg:<short_name>` | `pkg:roomplan` |
 
