@@ -8,7 +8,7 @@ enum Confidence {
 
   /// Low confidence.
   low;
-  
+
   /// Creates a [Confidence] from a JSON string.
   static Confidence fromJson(String json) {
     switch (json.toLowerCase()) {
@@ -22,7 +22,7 @@ enum Confidence {
         return Confidence.low;
     }
   }
-  
+
   /// Converts this [Confidence] to a JSON string.
   String toJson() => name;
 }

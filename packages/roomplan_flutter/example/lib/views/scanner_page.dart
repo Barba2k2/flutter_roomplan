@@ -85,7 +85,8 @@ class _ScannerPageState extends State<ScannerPage> {
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) => ChangeNotifierProvider( // Provide ResultsViewModel
+              builder: (context) => ChangeNotifierProvider(
+                // Provide ResultsViewModel
                 create: (context) => ResultsViewModel(scanResult: result),
                 child: const ResultsPage(),
               ),

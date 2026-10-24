@@ -18,7 +18,8 @@ class ScannerViewModel extends ChangeNotifier {
     _scanSubscription = _roomPlanScanner.onScanResult.listen((scanResult) {
       if (scanResult != null) {
         _currentScanResult = scanResult;
-        _scanStatus = 'Scanning... (${scanResult.room.walls.length} walls detected)';
+        _scanStatus =
+            'Scanning... (${scanResult.room.walls.length} walls detected)';
         notifyListeners();
       }
     });

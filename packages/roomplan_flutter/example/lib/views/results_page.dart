@@ -13,9 +13,11 @@ class ResultsPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<ResultsViewModel>( // Use Consumer to access ViewModel
+    return Consumer<ResultsViewModel>(
+      // Use Consumer to access ViewModel
       builder: (context, viewModel, child) {
-        final scanResult = viewModel.scanResult; // Get scanResult from ViewModel
+        final scanResult =
+            viewModel.scanResult; // Get scanResult from ViewModel
         return DefaultTabController(
           length: 5,
           child: Scaffold(

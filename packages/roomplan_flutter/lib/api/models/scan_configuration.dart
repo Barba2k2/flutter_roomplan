@@ -10,29 +10,29 @@
 class ScanConfiguration {
   /// The quality level for room scanning.
   final ScanQuality quality;
-  
+
   /// Maximum duration for a scanning session in seconds.
   /// If null, no timeout is applied.
   final int? timeoutSeconds;
-  
+
   /// Whether to enable real-time updates during scanning.
   final bool enableRealtimeUpdates;
-  
+
   /// Whether to detect and include furniture objects in the scan.
   final bool detectFurniture;
-  
+
   /// Whether to detect and include doors in the scan.
   final bool detectDoors;
-  
+
   /// Whether to detect and include windows in the scan.
   final bool detectWindows;
-  
+
   /// Minimum confidence level for detected objects to be included.
   final double minimumConfidence;
-  
+
   /// Whether to enable advanced surface detection.
   final bool enableAdvancedSurfaceDetection;
-  
+
   /// Creates a scan configuration with the specified settings.
   const ScanConfiguration({
     this.quality = ScanQuality.balanced,
@@ -44,8 +44,8 @@ class ScanConfiguration {
     this.minimumConfidence = 0.5,
     this.enableAdvancedSurfaceDetection = false,
   }) : assert(minimumConfidence >= 0.0 && minimumConfidence <= 1.0,
-             'minimumConfidence must be between 0.0 and 1.0');
-  
+            'minimumConfidence must be between 0.0 and 1.0');
+
   /// Creates a configuration optimized for speed.
   const ScanConfiguration.fast({
     this.timeoutSeconds = 60,
@@ -56,7 +56,7 @@ class ScanConfiguration {
     this.minimumConfidence = 0.3,
     this.enableAdvancedSurfaceDetection = false,
   }) : quality = ScanQuality.fast;
-  
+
   /// Creates a configuration optimized for accuracy.
   const ScanConfiguration.accurate({
     this.timeoutSeconds = 300,
@@ -67,7 +67,7 @@ class ScanConfiguration {
     this.minimumConfidence = 0.8,
     this.enableAdvancedSurfaceDetection = true,
   }) : quality = ScanQuality.high;
-  
+
   /// Creates a configuration with minimal features for basic room outline.
   const ScanConfiguration.minimal({
     this.timeoutSeconds = 120,
@@ -78,7 +78,7 @@ class ScanConfiguration {
     this.minimumConfidence = 0.7,
     this.enableAdvancedSurfaceDetection = false,
   }) : quality = ScanQuality.balanced;
-  
+
   /// Converts the configuration to a map for native platform communication.
   Map<String, dynamic> toMap() {
     return {
@@ -92,7 +92,7 @@ class ScanConfiguration {
       'enableAdvancedSurfaceDetection': enableAdvancedSurfaceDetection,
     };
   }
-  
+
   /// Creates a configuration from a map.
   factory ScanConfiguration.fromMap(Map<String, dynamic> map) {
     return ScanConfiguration(
@@ -106,10 +106,11 @@ class ScanConfiguration {
       detectDoors: map['detectDoors'] as bool? ?? true,
       detectWindows: map['detectWindows'] as bool? ?? true,
       minimumConfidence: (map['minimumConfidence'] as num?)?.toDouble() ?? 0.5,
-      enableAdvancedSurfaceDetection: map['enableAdvancedSurfaceDetection'] as bool? ?? false,
+      enableAdvancedSurfaceDetection:
+          map['enableAdvancedSurfaceDetection'] as bool? ?? false,
     );
   }
-  
+
   /// Creates a copy of this configuration with modified values.
   ScanConfiguration copyWith({
     ScanQuality? quality,
@@ -124,19 +125,21 @@ class ScanConfiguration {
     return ScanConfiguration(
       quality: quality ?? this.quality,
       timeoutSeconds: timeoutSeconds ?? this.timeoutSeconds,
-      enableRealtimeUpdates: enableRealtimeUpdates ?? this.enableRealtimeUpdates,
+      enableRealtimeUpdates:
+          enableRealtimeUpdates ?? this.enableRealtimeUpdates,
       detectFurniture: detectFurniture ?? this.detectFurniture,
       detectDoors: detectDoors ?? this.detectDoors,
       detectWindows: detectWindows ?? this.detectWindows,
       minimumConfidence: minimumConfidence ?? this.minimumConfidence,
-      enableAdvancedSurfaceDetection: enableAdvancedSurfaceDetection ?? this.enableAdvancedSurfaceDetection,
+      enableAdvancedSurfaceDetection:
+          enableAdvancedSurfaceDetection ?? this.enableAdvancedSurfaceDetection,
     );
   }
-  
+
   @override
   bool operator ==(Object other) {
     if (identical(this, other)) return true;
-    
+
     return other is ScanConfiguration &&
         other.quality == quality &&
         other.timeoutSeconds == timeoutSeconds &&
@@ -147,7 +150,7 @@ class ScanConfiguration {
         other.minimumConfidence == minimumConfidence &&
         other.enableAdvancedSurfaceDetection == enableAdvancedSurfaceDetection;
   }
-  
+
   @override
   int get hashCode {
     return Object.hash(
@@ -161,7 +164,7 @@ class ScanConfiguration {
       enableAdvancedSurfaceDetection,
     );
   }
-  
+
   @override
   String toString() {
     return 'ScanConfiguration('
@@ -181,15 +184,15 @@ enum ScanQuality {
   /// Fast scanning with lower accuracy.
   /// Suitable for quick previews or when battery life is a concern.
   fast,
-  
+
   /// Balanced scanning with moderate accuracy and speed.
   /// Good default choice for most use cases.
   balanced,
-  
+
   /// High-quality scanning with maximum accuracy.
   /// Takes longer but provides the most detailed results.
   high;
-  
+
   /// Human-readable description of the quality level.
   String get description {
     switch (this) {
