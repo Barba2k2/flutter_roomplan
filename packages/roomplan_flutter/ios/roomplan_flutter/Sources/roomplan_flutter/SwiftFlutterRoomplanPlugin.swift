@@ -31,8 +31,7 @@ public class SwiftFlutterRoomplanPlugin: NSObject, FlutterPlugin {
   public func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
     switch call.method {
     case "startRoomCapture":
-      let configuration = call.arguments as? [String: Any]
-      RoomPlanController.shared.startSession(with: configuration, result: result)
+      RoomPlanController.shared.startSession(result: result)
     case "stopRoomCapture":
       RoomPlanController.shared.stopSession(result: result)
     case "isSupported":
@@ -46,11 +45,6 @@ public class SwiftFlutterRoomplanPlugin: NSObject, FlutterPlugin {
   ///
   /// This method checks for iOS version compatibility and LiDAR sensor availability.
   private func checkRoomPlanSupport(result: @escaping FlutterResult) {
-    guard #available(iOS 16.0, *) else {
-      result(false)
-      return
-    }
-    
     // Check if device has LiDAR sensor and RoomPlan is available
     #if canImport(RoomPlan)
     // Check if RoomCaptureSession is available (requires LiDAR)
@@ -62,30 +56,5 @@ public class SwiftFlutterRoomplanPlugin: NSObject, FlutterPlugin {
     #else
     result(false)
     #endif
-  }
-}
-
-/// A fallback handler for devices where RoomPlan is not available (iOS < 16.0).
-///
-/// This handler ensures that the app does not crash and provides a consistent
-/// API surface, returning 'isSupported = false'.
-class RoomPlanFallbackHandler: NSObject, FlutterPlugin {
-  public static func register(with registrar: FlutterPluginRegistrar) {
-    // This handler is registered by the main plugin class, so this method is empty.
-  }
-
-  public func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
-    switch call.method {
-    case "isSupported":
-      result(false)
-    case "startRoomCapture", "stopRoomCapture":
-      result(
-        FlutterError(
-          code: "not_available",
-          message: "RoomPlan is only available on iOS 16.0 and later with LiDAR sensor.",
-          details: nil))
-    default:
-      result(FlutterMethodNotImplemented)
-    }
   }
 }

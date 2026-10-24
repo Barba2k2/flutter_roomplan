@@ -26,6 +26,3 @@ enum Confidence {
   /// Converts this [Confidence] to a JSON string.
   String toJson() => name;
 }
-
-/// A fallback for unknown confidence values.
-const unknownConfidence = Confidence.low;

@@ -15,18 +15,18 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'RoomPlan Flutter Example',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-        useMaterial3: true,
-      ),
-      home: MultiProvider(
-        providers: [
-          ChangeNotifierProvider(create: (context) => HomeViewModel()),
-          ChangeNotifierProvider(create: (context) => ScannerViewModel()),
-        ],
-        child: const MainNavigationPage(),
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (context) => HomeViewModel()),
+        ChangeNotifierProvider(create: (context) => ScannerViewModel()),
+      ],
+      child: MaterialApp(
+        title: 'RoomPlan Flutter Example',
+        theme: ThemeData(
+          colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+          useMaterial3: true,
+        ),
+        home: const MainNavigationPage(),
       ),
     );
   }

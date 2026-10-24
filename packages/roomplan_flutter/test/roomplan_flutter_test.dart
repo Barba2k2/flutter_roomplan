@@ -11,9 +11,9 @@ void main() {
   const mockScanResultJson = '''
   {
     "dimensions": {"x": 5.0, "y": 2.5, "z": 4.0},
-    "walls": [], "objects": [], "doors": [], "windows": [],
-    "metadata": { "session_duration": 120 },
-    "confidence": { "overall": 0.8 }
+    "walls": [], "objects": [], "windows": [],
+    "doors": [{"uuid": "d", "confidence": "high", "dimensions": {"x": 0.9, "y": 2.0, "z": 0.0}}],
+    "metadata": { "session_duration": 120 }
   }
   ''';
 
@@ -134,7 +134,7 @@ void main() {
       expect(result.room.dimensions!.length, equals(5.0));
       expect(result.room.dimensions!.width, equals(4.0));
       expect(result.room.dimensions!.height, equals(2.5));
-      expect(result.confidence.overall, equals(0.8));
+      expect(result.confidence.overall, equals(1.0));
 
       scanner.dispose();
     });

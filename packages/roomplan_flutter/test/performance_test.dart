@@ -1,8 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:roomplan_flutter/roomplan_flutter.dart';
 import 'package:roomplan_flutter/src/performance/object_pool.dart';
 import 'package:roomplan_flutter/src/performance/optimized_mapper.dart';
 import 'package:roomplan_flutter/src/performance/performance_monitor.dart';
-import 'package:roomplan_flutter/src/mapper.dart';
 import 'package:vector_math/vector_math_64.dart';
 
 void main() {
@@ -181,23 +181,13 @@ void main() {
         }
         ''';
 
-        // Parse with optimized mapper
-        final optimizedResult = OptimizedMapper.parseScanResult(testJson);
+        final result = OptimizedMapper.parseScanResult(testJson);
 
-        // Parse with legacy mapper
-        final legacyResult = parseScanResultLegacy(testJson);
-
-        // Results should be equivalent
-        expect(optimizedResult, isNotNull);
-        expect(legacyResult, isNotNull);
-        expect(optimizedResult!.room.walls.length,
-            equals(legacyResult!.room.walls.length));
-        expect(optimizedResult.room.objects.length,
-            equals(legacyResult.room.objects.length));
-        expect(optimizedResult.room.walls.first.uuid,
-            equals(legacyResult.room.walls.first.uuid));
-        expect(optimizedResult.room.objects.first.category,
-            equals(legacyResult.room.objects.first.category));
+        expect(result, isNotNull);
+        expect(result!.room.walls.length, equals(1));
+        expect(result.room.objects.length, equals(1));
+        expect(result.room.walls.first.uuid, equals('wall1'));
+        expect(result.room.objects.first.category, ObjectCategory.table);
       });
     });
 
@@ -227,7 +217,7 @@ void main() {
 
         // Warm up
         for (int i = 0; i < 5; i++) {
-          parseScanResult(complexJson);
+          OptimizedMapper.parseScanResult(complexJson);
         }
 
         // Time multiple parses
@@ -235,7 +225,7 @@ void main() {
         const iterations = 100;
 
         for (int i = 0; i < iterations; i++) {
-          final result = parseScanResult(complexJson);
+          final result = OptimizedMapper.parseScanResult(complexJson);
           expect(result, isNotNull);
         }
 
@@ -262,7 +252,7 @@ void main() {
 
         // Parse many times to test for memory leaks
         for (int i = 0; i < 1000; i++) {
-          final result = parseScanResult(testJson);
+          final result = OptimizedMapper.parseScanResult(testJson);
           expect(result, isNotNull);
         }
 

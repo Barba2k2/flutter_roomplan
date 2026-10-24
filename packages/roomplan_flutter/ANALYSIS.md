@@ -1,10 +1,10 @@
 # roomplan_flutter — Analysis & Improvement Plan
 
-> v0.2.0 · iOS-only · Apple RoomPlan wrapper · LiDAR room scanning
+> v0.3.0 · iOS-only · Apple RoomPlan wrapper · LiDAR room scanning
 
 ## Package Summary
 
-Flutter plugin wrapping Apple RoomPlan API (iOS 16+). Captures 3D room scans via LiDAR,
+Flutter plugin wrapping Apple RoomPlan API (iOS 17+). Captures 3D room scans via LiDAR,
 detecting walls, doors, windows, openings, furniture objects, floor, and ceiling — all
 with dimensions, 3D positions, transforms, and confidence levels.
 
@@ -42,11 +42,7 @@ with dimensions, 3D positions, transforms, and confidence levels.
 
 ### Silent Failures
 
-6. **`ScanConfiguration` fields ignored on native side**  
-   `detectFurniture`, `detectDoors`, `detectWindows`, `minimumConfidence`,
-   `enableAdvancedSurfaceDetection`, `timeoutSeconds`, `enableRealtimeUpdates` — ALL
-   silently ignored. `createConfiguration()` returns a default config with a comment
-   acknowledging iOS 16 has limited options. Client expects them to work.
+6. **Scan configuration class removed** (0.3.0): none of its fields reached the native side.
 
 ### Thread Safety
 
@@ -68,8 +64,8 @@ with dimensions, 3D positions, transforms, and confidence levels.
 | `pause()` / `resume()` | 17.0 | ❌ Not exposed |
 | `visualizationMode` customization | 17.0 | ❌ Not exposed |
 | `didProvide:command:` delegate | 17.0 | ❌ Not exposed |
-| Thermal state monitoring | 16.0 | ❌ Not exposed |
-| Session state query (isRunning, isPaused) | 16.0 | ❌ Not exposed |
+| Thermal state monitoring | 17.0 | ❌ Not exposed |
+| Session state query (isRunning, isPaused) | 17.0 | ❌ Not exposed |
 
 ## Dependency
 
@@ -83,7 +79,7 @@ with dimensions, 3D positions, transforms, and confidence levels.
 - [x] Add missing `ObjectCategory` values (television, fireplace, stairs, bathtub, dishwasher)
 - [x] Fix `flutterResult` leak on dismiss (add `UIAdaptivePresentationControllerDelegate`)
 - [x] Fix deprecated `UIApplication.shared.windows` → `UIWindowScene`
-- [x] Document `ScanConfiguration` limitations clearly in Dartdoc
+- [x] Remove the scan configuration class (no field was applied natively)
 
 ### Phase 2 — Cleanup
 - [x] Remove `lib/src/models/` dead code (5 files, ~250 lines)

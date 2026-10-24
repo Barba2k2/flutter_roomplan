@@ -25,14 +25,15 @@ class ScannerViewModel extends ChangeNotifier {
     });
   }
 
-  Future<void> startScanning() async {
+  Future<ScanResult?> startScanning() async {
     _isScanning = true;
     _scanStatus = 'Starting scan...';
     _currentScanResult = null;
     notifyListeners();
 
+    ScanResult? result;
     try {
-      final result = await _roomPlanScanner.startScanning();
+      result = await _roomPlanScanner.startScanning();
 
       if (result != null) {
         _currentScanResult = result;
@@ -46,6 +47,7 @@ class ScannerViewModel extends ChangeNotifier {
       _isScanning = false;
       notifyListeners();
     }
+    return result;
   }
 
   @override

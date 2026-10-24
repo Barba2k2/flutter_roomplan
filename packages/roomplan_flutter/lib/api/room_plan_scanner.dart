@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:roomplan_flutter/roomplan_flutter.dart';
-import 'package:roomplan_flutter/src/mapper.dart';
+import 'package:roomplan_flutter/src/performance/optimized_mapper.dart';
 import 'package:roomplan_flutter/src/services/room_plan_channel.dart';
 
 /// Central class for interacting with the RoomPlan feature.
@@ -22,7 +22,7 @@ class RoomPlanScanner {
 
   /// Checks if RoomPlan is supported on the current device.
   ///
-  /// Returns true if the device is running iOS 16+ and has LiDAR support.
+  /// Returns true if the device is running iOS 17+ and has LiDAR support.
   static Future<bool> isSupported() async {
     return RoomPlanChannel.isSupported();
   }
@@ -37,35 +37,33 @@ class RoomPlanScanner {
     // Performance optimization: Use lazy stream transformation to avoid unnecessary processing
     final onScanResult = channel.scanUpdateStream
         .where((result) => result is String)
-        .map<ScanResult?>((result) {
-      try {
-        return parseScanResult(result as String);
-      } catch (e, stacktrace) {
-        // Performance optimization: Only print debug info in debug mode
-        assert(() {
-          debugPrint('Error parsing scan update: $e');
-          debugPrint(stacktrace.toString());
-          return true;
-        }());
-        return null;
-      }
-    });
+        .map<ScanResult?>(
+      (result) {
+        try {
+          return OptimizedMapper.parseScanResult(result as String);
+        } catch (e, stacktrace) {
+          // Performance optimization: Only print debug info in debug mode
+          assert(() {
+            debugPrint('Error parsing scan update: $e');
+            debugPrint(stacktrace.toString());
+            return true;
+          }());
+          return null;
+        }
+      },
+    );
 
     return RoomPlanScanner._(channel, onScanResult);
   }
 
-  /// Starts a new room scanning session with optional configuration.
-  ///
-  /// [configuration] allows you to customize the scanning behavior.
-  /// If not provided, default settings will be used.
+  /// Starts a new room scanning session.
   ///
   /// Returns a [ScanResult] upon completion, or null if the scan
   /// is cancelled or fails.
-  Future<ScanResult?> startScanning({ScanConfiguration? configuration}) async {
-    final result =
-        await _channel.startRoomCapture(configuration: configuration);
+  Future<ScanResult?> startScanning() async {
+    final result = await _channel.startRoomCapture();
     if (result is String) {
-      return parseScanResult(result);
+      return OptimizedMapper.parseScanResult(result);
     }
     return null;
   }

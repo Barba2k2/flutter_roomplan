@@ -1,9 +1,12 @@
 import 'dart:convert';
+import 'dart:developer';
+import 'dart:math' as math;
 import 'package:flutter/foundation.dart';
 import 'package:roomplan_flutter/roomplan_flutter.dart';
 import 'package:vector_math/vector_math_64.dart';
 import 'object_pool.dart';
 import 'performance_monitor.dart';
+import 'room_footprint_helper.dart';
 
 /// Performance-optimized JSON parser with caching and object pooling
 class OptimizedMapper {
@@ -20,6 +23,7 @@ class OptimizedMapper {
   /// Parse scan result with performance optimizations
   static ScanResult? parseScanResult(String? jsonResult) {
     if (jsonResult == null) return null;
+    if (kDebugMode) _logRawJson(jsonResult);
 
     return PerformanceMonitor.timeOperation('json_parse_total', () {
       try {
@@ -31,28 +35,57 @@ class OptimizedMapper {
           return _toScanResultOptimized(data);
         });
       } catch (e, stacktrace) {
-        // Performance optimization: Only print debug info in debug mode
-        assert(() {
-          debugPrint('Error parsing scan result: $e');
-          debugPrint(stacktrace.toString());
-          return true;
-        }());
+        log(
+          'Error parsing scan result: $e',
+          name: 'OptimizedMapper',
+          stackTrace: stacktrace,
+        );
         return null;
       }
     });
+  }
+
+  /// Debug-only: prints the native JSON in chunks (console cuts long lines)
+  /// plus one summary line per wall, so device scans can be checked by hand.
+  static void _logRawJson(String jsonResult) {
+    const chunk = 800;
+    final parts = (jsonResult.length / chunk).ceil();
+    for (var i = 0; i < parts; i++) {
+      final end = math.min(jsonResult.length, (i + 1) * chunk);
+      log(
+        'raw ${i + 1}/$parts: ${jsonResult.substring(i * chunk, end)}',
+        name: 'RoomPlanScan',
+      );
+    }
+    try {
+      final data = json.decode(jsonResult) as Map<String, dynamic>;
+      final room = data['room'] as Map<String, dynamic>? ?? data;
+      for (final w in (room['walls'] as List? ?? <dynamic>[])) {
+        final d = (w as Map<String, dynamic>)['dimensions'] as Map?;
+        log(
+          'wall ${w['uuid']} x=${d?['x']} y=${d?['y']} z=${d?['z']}',
+          name: 'RoomPlanScan',
+        );
+      }
+      log(
+        'room dimensions(native)=${room['dimensions']} '
+        'footprint(walls)=${RoomFootprintHelper.measure(room['walls'] as List? ?? <dynamic>[])}',
+        name: 'RoomPlanScan',
+      );
+    } catch (e) {
+      log('raw summary failed: $e', name: 'RoomPlanScan');
+    }
   }
 
   static ScanResult _toScanResultOptimized(Map<String, dynamic> data) {
     // Performance optimization: Reduce map lookups with local variables
     final roomData = data['room'] as Map<String, dynamic>? ?? data;
     final metadataData = data['metadata'] as Map<String, dynamic>?;
-    final confidenceData = data['confidence'] as Map<String, dynamic>? ??
-        roomData['confidence'] as Map<String, dynamic>?;
 
     return ScanResult(
       room: _toRoomDataOptimized(roomData),
       metadata: _toScanMetadataOptimized(metadataData),
-      confidence: _toScanConfidenceOptimized(confidenceData, roomData),
+      confidence: _toScanConfidenceOptimized(roomData),
     );
   }
 
@@ -65,38 +98,79 @@ class OptimizedMapper {
     final openingsData = data['openings'] as List?;
 
     final walls = wallsData
-            ?.map((w) => _toWallDataOptimized(w as Map<String, dynamic>))
+            ?.map(
+              (w) => _toWallDataOptimized(w as Map<String, dynamic>),
+            )
             .toList() ??
         <WallData>[];
     final objects = objectsData
-            ?.map((o) => _toObjectDataOptimized(o as Map<String, dynamic>))
+            ?.map(
+              (o) => _toObjectDataOptimized(o as Map<String, dynamic>),
+            )
             .toList() ??
         <ObjectData>[];
     final doors = doorsData
-            ?.map((d) => _toOpeningDataOptimized(
-                d as Map<String, dynamic>, OpeningType.door))
+            ?.map(
+              (d) => _toOpeningDataOptimized(
+                d as Map<String, dynamic>,
+                OpeningType.door,
+              ),
+            )
             .toList() ??
         <OpeningData>[];
     final windows = windowsData
-            ?.map((w) => _toOpeningDataOptimized(
-                w as Map<String, dynamic>, OpeningType.window))
+            ?.map(
+              (w) => _toOpeningDataOptimized(
+                w as Map<String, dynamic>,
+                OpeningType.window,
+              ),
+            )
             .toList() ??
         <OpeningData>[];
     final openings = openingsData
-            ?.map((o) => _toOpeningDataOptimized(
-                o as Map<String, dynamic>, OpeningType.opening))
+            ?.map(
+              (o) => _toOpeningDataOptimized(
+                o as Map<String, dynamic>,
+                OpeningType.opening,
+              ),
+            )
             .toList() ??
         <OpeningData>[];
 
-    final floor = data['floor'] != null
-        ? _toWallDataOptimized(data['floor'] as Map<String, dynamic>)
+    // Native room size is a world-axis bounding box; re-measure in the
+    // room's own axes from the walls when possible.
+    final footprint = RoomFootprintHelper.measure(wallsData ?? <dynamic>[]);
+    Map<String, dynamic>? withFootprint(Map<String, dynamic>? surface) {
+      if (surface == null || footprint == null) return surface;
+      return {
+        ...surface,
+        'dimensions': {'x': footprint.$1, 'y': 0.0, 'z': footprint.$2},
+      };
+    }
+
+    final floorData = withFootprint(data['floor'] as Map<String, dynamic>?);
+    final ceilingData = withFootprint(data['ceiling'] as Map<String, dynamic>?);
+    final floor = floorData != null
+        ? _toWallDataOptimized(
+            floorData,
+            isSurface: false,
+          )
         : null;
-    final ceiling = data['ceiling'] != null
-        ? _toWallDataOptimized(data['ceiling'] as Map<String, dynamic>)
+    final ceiling = ceilingData != null
+        ? _toWallDataOptimized(
+            ceilingData,
+            isSurface: false,
+          )
         : null;
-    final dimensions = _toRoomDimensionsOptimized(
-            data['dimensions'] as Map<String, dynamic>?) ??
-        floor?.dimensions;
+    final nativeDimensions = _toRoomDimensionsOptimized(
+      data['dimensions'] as Map<String, dynamic>?,
+    );
+    final dimensions = footprint != null && nativeDimensions != null
+        ? nativeDimensions.copyWith(
+            length: footprint.$1,
+            width: footprint.$2,
+          )
+        : nativeDimensions ?? floor?.dimensions;
 
     return RoomData(
       dimensions: dimensions,
@@ -123,36 +197,67 @@ class OptimizedMapper {
     );
   }
 
+  /// Apple Surface.dimensions: x = width, y = height, z = thickness (as length).
+  static RoomDimensions? _toSurfaceDimensionsOptimized(
+      Map<String, dynamic>? data) {
+    if (data == null) return null;
+    return RoomDimensions(
+      width: (data['x'] as num? ?? 0.0).toDouble(),
+      height: (data['y'] as num? ?? 0.0).toDouble(),
+      length: (data['z'] as num? ?? 0.0).toDouble(),
+    );
+  }
+
   static Matrix4? _toMatrixOptimized(List<dynamic>? data) {
     if (data == null) return null;
 
     // Performance optimization: Direct Matrix4 creation from list
-    final list = data.cast<num>().map((e) => e.toDouble()).toList();
+    final list = data
+        .cast<num>()
+        .map(
+          (e) => e.toDouble(),
+        )
+        .toList();
     return Matrix4.fromList(list);
   }
 
   static Position _getPositionFromTransform(Matrix4? transform) {
-    if (transform == null) return Position(Vector3.zero());
+    if (transform == null) {
+      return Position(
+        Vector3.zero(),
+      );
+    }
 
     // Performance optimization: Direct translation extraction
-    return Position(transform.getTranslation());
+    return Position(
+      transform.getTranslation(),
+    );
   }
 
-  static WallData _toWallDataOptimized(Map<String, dynamic> data) {
-    final dimensions =
-        _toRoomDimensionsOptimized(data['dimensions'] as Map<String, dynamic>?);
+  static WallData _toWallDataOptimized(
+    Map<String, dynamic> data, {
+    bool isSurface = true,
+  }) {
+    final rawDimensions = data['dimensions'] as Map<String, dynamic>?;
+    final dimensions = isSurface
+        ? _toSurfaceDimensionsOptimized(rawDimensions)
+        : _toRoomDimensionsOptimized(rawDimensions);
     final transform = _toMatrixOptimized(data['transform'] as List<dynamic>?);
     final position = _getPositionFromTransform(transform);
 
-    // Performance optimization: Combine door and window lists efficiently
-    final doorsList = data['doors'] as List? ?? <dynamic>[];
-    final windowsList = data['windows'] as List? ?? <dynamic>[];
-
-    final openings = <OpeningData>[];
-    openings.addAll(doorsList.map((d) =>
-        _toOpeningDataOptimized(d as Map<String, dynamic>, OpeningType.door)));
-    openings.addAll(windowsList.map((w) => _toOpeningDataOptimized(
-        w as Map<String, dynamic>, OpeningType.window)));
+    // Native nests each wall's children (Surface.parentIdentifier).
+    final openings = <OpeningData>[
+      for (final (key, type) in const [
+        ('doors', OpeningType.door),
+        ('windows', OpeningType.window),
+        ('openings', OpeningType.opening),
+      ])
+        for (final o in data[key] as List? ?? <dynamic>[])
+          _toOpeningDataOptimized(
+            o as Map<String, dynamic>,
+            type,
+          ),
+    ];
 
     return WallData(
       uuid: data['uuid'] as String? ?? '',
@@ -187,9 +292,12 @@ class OptimizedMapper {
   }
 
   static OpeningData _toOpeningDataOptimized(
-      Map<String, dynamic> data, OpeningType type) {
-    final dimensions =
-        _toRoomDimensionsOptimized(data['dimensions'] as Map<String, dynamic>?);
+    Map<String, dynamic> data,
+    OpeningType type,
+  ) {
+    final dimensions = _toSurfaceDimensionsOptimized(
+      data['dimensions'] as Map<String, dynamic>?,
+    );
     final transform = _toMatrixOptimized(data['transform'] as List<dynamic>?);
     final position = _getPositionFromTransform(transform);
 
@@ -208,7 +316,6 @@ class OptimizedMapper {
   static ScanMetadata _toScanMetadataOptimized(Map<String, dynamic>? data) {
     if (data == null) {
       return ScanMetadata(
-        scanDate: DateTime.now(),
         scanDuration: Duration.zero,
         deviceModel: 'Unknown',
         hasLidar: false,
@@ -222,12 +329,12 @@ class OptimizedMapper {
       _ => 0.0,
     };
 
-    final scanDuration =
-        Duration(microseconds: (durationInSeconds * 1000000).round());
+    final scanDuration = Duration(
+      microseconds: (durationInSeconds * 1000000).round(),
+    );
     final hasLidar = (data['has_lidar'] as String? ?? 'false') == 'true';
 
     return ScanMetadata(
-      scanDate: DateTime.now(),
       scanDuration: scanDuration,
       deviceModel: data['device_model'] as String? ?? 'Unknown',
       hasLidar: hasLidar,
@@ -235,31 +342,25 @@ class OptimizedMapper {
   }
 
   static ScanConfidence _toScanConfidenceOptimized(
-      Map<String, dynamic>? confidenceData, Map<String, dynamic>? roomData) {
-    if (confidenceData?.containsKey('overall') == true) {
-      return ScanConfidence(
-        overall: (confidenceData!['overall'] as num?)?.toDouble() ?? 0.0,
-        wallAccuracy:
-            (confidenceData['wallAccuracy'] as num?)?.toDouble() ?? 0.0,
-        dimensionAccuracy:
-            (confidenceData['dimensionAccuracy'] as num?)?.toDouble() ?? 0.0,
-      );
-    }
-
+    Map<String, dynamic>? roomData,
+  ) {
     // Performance optimization: Efficient confidence calculation with single pass
     if (roomData == null) {
       return const ScanConfidence(
-          overall: 0.0, wallAccuracy: 0.0, dimensionAccuracy: 0.0);
+        overall: 0.0,
+        wallAccuracy: 0.0,
+      );
     }
 
     return _calculateConfidenceFromRoomData(roomData);
   }
 
   static ScanConfidence _calculateConfidenceFromRoomData(
-      Map<String, dynamic> roomData) {
+    Map<String, dynamic> roomData,
+  ) {
     // Performance optimization: Single-pass calculation with early termination
-    double wallSum = 0, objectSum = 0, totalSum = 0;
-    int wallCount = 0, objectCount = 0, totalCount = 0;
+    double wallSum = 0, totalSum = 0;
+    int wallCount = 0, totalCount = 0;
 
     // Process walls
     final walls = roomData['walls'] as List? ?? <dynamic>[];
@@ -275,11 +376,10 @@ class OptimizedMapper {
     // Process objects
     final objects = roomData['objects'] as List? ?? <dynamic>[];
     for (final object in objects) {
-      final confidence =
-          _getConfidenceValueOptimized(object['confidence'] as String?);
-      objectSum += confidence;
+      final confidence = _getConfidenceValueOptimized(
+        object['confidence'] as String?,
+      );
       totalSum += confidence;
-      objectCount++;
       totalCount++;
     }
 
@@ -297,7 +397,6 @@ class OptimizedMapper {
     return ScanConfidence(
       overall: totalCount > 0 ? totalSum / totalCount : 0.0,
       wallAccuracy: wallCount > 0 ? wallSum / wallCount : 0.0,
-      dimensionAccuracy: objectCount > 0 ? objectSum / objectCount : 0.0,
     );
   }
 

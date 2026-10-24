@@ -4,7 +4,7 @@ A Flutter plugin that allows you to use Apple's [RoomPlan API](https://developer
 
 ## Requirements
 
-- iOS 16.0+
+- iOS 17.0+
 - A device with a LiDAR sensor is required (e.g., iPhone 12 Pro or newer Pro models, iPhone 16 Pro/Pro Max, iPad Pro).
 
 ## Installation
@@ -123,7 +123,7 @@ class _ScannerWidgetState extends State<ScannerWidget> {
           padding: EdgeInsets.all(16.0),
           child: Text(
             'RoomPlan is not supported on this device.\n'
-            'Requires iOS 16+ and LiDAR sensor.',
+            'Requires iOS 17+ and LiDAR sensor.',
             textAlign: TextAlign.center,
           ),
         ),
@@ -158,25 +158,8 @@ Before starting a scan, you should check if the device supports RoomPlan:
 final isSupported = await RoomPlanScanner.isSupported();
 if (!isSupported) {
   // Show appropriate message to user
-  print('RoomPlan requires iOS 16+ and a LiDAR-enabled device');
+  print('RoomPlan requires iOS 17+ and a LiDAR-enabled device');
 }
-```
-
-### Scan Configuration
-
-You can customize the scanning behavior using `ScanConfiguration`:
-
-```dart
-final config = ScanConfiguration(
-  quality: ScanQuality.accurate,  // fast, balanced, accurate
-  timeoutSeconds: 300,           // 5 minute timeout
-  enableRealtimeUpdates: true,   // Real-time scan updates
-  detectFurniture: true,         // Include furniture detection
-  detectDoors: true,             // Include door detection
-  detectWindows: true,           // Include window detection
-);
-
-final result = await _roomScanner.startScanning(configuration: config);
 ```
 
 ### Unit System Support
@@ -325,14 +308,12 @@ The plugin returns a `ScanResult` object, which contains a tree of structured da
 - `ScanMetadata`: Contains metadata about the scanning session.
 
   - `scanDuration`: A `Duration` object.
-  - `scanDate`: The `DateTime` when the scan started.
   - `deviceModel`: The model of the device (e.g., "iPhone14,3").
   - `hasLidar`: A boolean indicating if the device has a LiDAR sensor.
 
 - `ScanConfidence`: Contains confidence values for different aspects of the scan.
   - `overall`: A `double` from 0.0 to 1.0.
   - `wallAccuracy`: A `double` for the accuracy of wall detection.
-  - `dimensionAccuracy`: A `double` for the accuracy of measurements.
 
 Refer to the source code for detailed information on all fields.
 
@@ -342,9 +323,9 @@ Refer to the source code for detailed information on all fields.
 
 **"RoomPlan is not supported"**
 
-- Ensure your device has iOS 16.0 or later
+- Ensure your device has iOS 17.0 or later
 - Verify your device has a LiDAR sensor (iPhone 12 Pro+, iPad Pro with LiDAR)
-- Check that your app's deployment target is set to iOS 16.0+
+- Check that your app's deployment target is set to iOS 17.0+
 
 **Camera permission denied**
 
@@ -383,7 +364,7 @@ Refer to the source code for detailed information on all fields.
 
 #### Instance Methods
 
-- `Future<ScanResult?> startScanning({ScanConfiguration? configuration})` - Begin a room scanning session with optional configuration
+- `Future<ScanResult?> startScanning()` - Begin a room scanning session
 - `Future<void> stopScanning()` - Stop the current scanning session
 - `void dispose()` - Clean up resources
 
@@ -391,20 +372,14 @@ Refer to the source code for detailed information on all fields.
 
 - `Stream<ScanResult?> onScanResult` - Stream of real-time scan updates
 
-### ScanConfiguration
+### PaintableAreaHelper
 
-- `quality`: `ScanQuality.fast` | `.balanced` | `.accurate`
-- `timeoutSeconds`: Optional timeout in seconds
-- `enableRealtimeUpdates`: Enable real-time scan updates
-- `detectFurniture`: Include furniture in scan results
-- `detectDoors`: Include doors in scan results
-- `detectWindows`: Include windows in scan results
+Static helpers, areas in m²:
 
-#### Preset Configurations
-
-- `ScanConfiguration.fast()`: Quick scanning with basic features
-- `ScanConfiguration.accurate()`: High-quality scanning with all features
-- `ScanConfiguration.minimal()`: Minimal scanning for testing
+- `grossArea(WallData wall)` — `width * height`.
+- `openingsArea(WallData wall, OpeningType type)` — sum of that wall's nested doors, windows or openings.
+- `storageAreaByWall(List<WallData> walls, List<ObjectData> objects)` — wall uuid → area covered by `ObjectCategory.storage` objects within 0.3 m of the wall (nearest wall wins; extent along the wall × min(object, wall height)). Other categories are ignored.
+- `paintableArea(WallData wall, {double storageArea = 0})` — gross minus all openings minus `storageArea`, never below 0.
 
 ### MeasurementUnit
 
@@ -429,7 +404,6 @@ Refer to the source code for detailed information on all fields.
 #### Device & Platform
 
 - `RoomPlanNotAvailableException` - RoomPlan not supported
-- `UnsupportedVersionException` - iOS version too old
 - `ARKitNotSupportedException` - ARKit not available
 - `InsufficientHardwareException` - Device lacks required hardware
 
@@ -466,7 +440,7 @@ Refer to the source code for detailed information on all fields.
 
 To properly test the Flutter RoomPlan package, you need a device with:
 
-- **iOS 16.0 or later**
+- **iOS 17.0 or later**
 - **LiDAR sensor**
 
 #### Compatible Devices:
@@ -476,6 +450,8 @@ To properly test the Flutter RoomPlan package, you need a device with:
 - iPhone 14 Pro / Pro Max
 - iPhone 15 Pro / Pro Max
 - iPhone 16 Pro / Pro Max
+- iPhone 17 Pro / Pro Max
+- iPhone 18 Pro / Pro Max
 - iPad Pro 11-inch (4th generation and later)
 - iPad Pro 12.9-inch (5th generation and later)
 
@@ -488,7 +464,7 @@ These devices will return `isSupported() = false`:
 - iPhone 14 / 14 Plus
 - iPhone 15 / 15 Plus
 - iPhone 16 / 16 Plus
-- Any device running iOS < 16.0
+- Any device running iOS < 17.0
 
 ## Testing Checklist
 

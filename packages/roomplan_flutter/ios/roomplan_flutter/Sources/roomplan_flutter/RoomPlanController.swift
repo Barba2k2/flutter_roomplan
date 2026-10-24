@@ -6,9 +6,7 @@ import Foundation
 import RoomPlan
 
 /// Comprehensive error types for RoomPlan operations with detailed debugging information
-@available(iOS 16.0, *)
 enum RoomPlanError: Error {
-    case unsupportedVersion
     case roomPlanNotSupported
     case cameraPermissionDenied
     case cameraPermissionNotDetermined
@@ -32,8 +30,6 @@ enum RoomPlanError: Error {
     /// Error code for Flutter communication
     var code: String {
         switch self {
-        case .unsupportedVersion:
-            return "unsupported_version"
         case .roomPlanNotSupported:
             return "roomplan_not_supported"
         case .cameraPermissionDenied:
@@ -78,8 +74,6 @@ enum RoomPlanError: Error {
     /// Human-readable error message
     var message: String {
         switch self {
-        case .unsupportedVersion:
-            return "iOS 16.0 or later is required for RoomPlan functionality."
         case .roomPlanNotSupported:
             return "RoomPlan is not supported on this device. A LiDAR sensor is required."
         case .cameraPermissionDenied:
@@ -124,8 +118,6 @@ enum RoomPlanError: Error {
     /// Additional debugging details
     var details: String? {
         switch self {
-        case .unsupportedVersion:
-            return "Current iOS version: \(UIDevice.current.systemVersion). Minimum required: 16.0"
         case .roomPlanNotSupported:
             return "Device model: \(UIDevice.current.model). RoomCaptureSession.isSupported: \(RoomCaptureSession.isSupported)"
         case .cameraPermissionDenied, .cameraPermissionNotDetermined, .cameraPermissionUnknown:
@@ -153,8 +145,6 @@ enum RoomPlanError: Error {
     /// Recovery suggestions for the user
     var recoverySuggestion: String? {
         switch self {
-        case .unsupportedVersion:
-            return "Update your device to iOS 16.0 or later to use room scanning."
         case .roomPlanNotSupported:
             return "Use a device with a LiDAR sensor (iPhone 12 Pro or newer Pro models, iPad Pro with LiDAR)."
         case .cameraPermissionDenied:
@@ -245,7 +235,6 @@ extension ProcessInfo.ThermalState {
 /// - Starting and stopping the `RoomCaptureSession`.
 /// - Handling the `RoomCaptureSessionDelegate` events.
 /// - Acting as a `FlutterStreamHandler` to send real-time scan updates to Flutter.
-@available(iOS 16.0, *)
 class RoomPlanController: NSObject, RoomCaptureSessionDelegate, FlutterStreamHandler, UIAdaptivePresentationControllerDelegate {
   /// The shared singleton instance.
   static let shared = RoomPlanController()
@@ -253,7 +242,6 @@ class RoomPlanController: NSObject, RoomCaptureSessionDelegate, FlutterStreamHan
   /// The method channel used to communicate with Flutter.
   var channel: FlutterMethodChannel?
   private var roomCaptureView: RoomCaptureView?
-  private var finalResults: CapturedRoom?
   private var flutterResult: FlutterResult?
   private var startTime: Date?
   private var endTime: Date?
@@ -263,13 +251,20 @@ class RoomPlanController: NSObject, RoomCaptureSessionDelegate, FlutterStreamHan
 
   private override init() {}
 
-  /// Starts a new RoomPlan session with optional configuration.
+  /// Starts a new RoomPlan session.
   ///
   /// This method presents the `RoomCaptureView` and starts the scanning process.
   /// The `result` closure is called when the scan is finished or an error occurs.
-  func startSession(with configuration: [String: Any]? = nil, result: @escaping FlutterResult) {
+  func startSession(result: @escaping FlutterResult) {
+    // Ask for camera access on first use; without this the status stays notDetermined forever
+    if AVCaptureDevice.authorizationStatus(for: .video) == .notDetermined {
+      AVCaptureDevice.requestAccess(for: .video) { [weak self] _ in
+        DispatchQueue.main.async { self?.startSession(result: result) }
+      }
+      return
+    }
+
     self.flutterResult = result
-    self.finalResults = nil
 
     // Pre-flight checks with detailed error codes
     do {
@@ -309,7 +304,7 @@ class RoomPlanController: NSObject, RoomCaptureSessionDelegate, FlutterStreamHan
     }
     
     rootViewController.present(navVC, animated: true) { [weak self] in
-      self?.startCaptureSession(with: configuration, result: result)
+      self?.roomCaptureView?.captureSession.run(configuration: RoomCaptureSession.Configuration())
     }
   }
 
@@ -322,55 +317,8 @@ class RoomPlanController: NSObject, RoomCaptureSessionDelegate, FlutterStreamHan
     return keyWindow.rootViewController
   }
   
-  /// Starts the actual capture session after UI is presented
-  private func startCaptureSession(with configDict: [String: Any]? = nil, result: @escaping FlutterResult) {
-    let configuration = createConfiguration(from: configDict)
-
-    do {
-      roomCaptureView?.captureSession.run(configuration: configuration)
-    } catch {
-      result(FlutterError(code: "session_start_failed", message: "Failed to start capture session.", details: error.localizedDescription))
-    }
-  }
-  
-  /// Creates a RoomCaptureSession.Configuration from Flutter configuration dictionary
-  private func createConfiguration(from configDict: [String: Any]?) -> RoomCaptureSession.Configuration {
-    let configuration = RoomCaptureSession.Configuration()
-    
-    guard let configDict = configDict else {
-      return configuration
-    }
-    
-    // Apply quality settings
-    if let qualityString = configDict["quality"] as? String {
-      switch qualityString {
-      case "fast":
-        // Optimize for speed - disable some features if possible
-        break
-      case "high":
-        // Optimize for accuracy - enable all features
-        break
-      case "balanced":
-        // Default balanced settings
-        break
-      default:
-        break
-      }
-    }
-    
-    // Note: RoomCaptureSession.Configuration in iOS 16.0 has limited customization options
-    // Most configuration will be handled at the app level for now
-    
-    return configuration
-  }
-  
   /// Performs comprehensive pre-flight checks before starting a scan
   private func performPreflightChecks() throws {
-    // Check iOS version
-    guard #available(iOS 16.0, *) else {
-      throw RoomPlanError.unsupportedVersion
-    }
-    
     // Check RoomPlan availability
     guard RoomCaptureSession.isSupported else {
       throw RoomPlanError.roomPlanNotSupported
@@ -420,9 +368,9 @@ class RoomPlanController: NSObject, RoomCaptureSessionDelegate, FlutterStreamHan
   }
 
   /// Called when the user taps the 'Done' button in the scanning UI.
+  /// The view is dismissed in `didEndWith`, after RoomBuilder finishes processing.
   @objc func doneScanning() {
     roomCaptureView?.captureSession.stop()
-    dismiss()
   }
 
   /// Called when the user taps the 'Cancel' button in the scanning UI.
@@ -460,8 +408,6 @@ class RoomPlanController: NSObject, RoomCaptureSessionDelegate, FlutterStreamHan
   // MARK: - RoomCaptureSessionDelegate
   /// Called when the room layout is updated during a scan.
   public func captureSession(_ session: RoomCaptureSession, didUpdate room: CapturedRoom) {
-    finalResults = room
-
     if let eventSink = eventSink {
       // Go to a background thread to do the heavy encoding work
       DispatchQueue.global(qos: .userInitiated).async {
@@ -491,15 +437,7 @@ class RoomPlanController: NSObject, RoomCaptureSessionDelegate, FlutterStreamHan
     endTime = Date()
 
     if let error = error {
-      flutterResult?(
-        FlutterError(code: "native_error", message: error.localizedDescription, details: nil))
-      return
-    }
-
-    guard let finalResults = finalResults else {
-      flutterResult?(
-        FlutterError(code: "data_not_found", message: "Final scan data is missing.", details: nil)
-      )
+      finish(FlutterError(code: "native_error", message: error.localizedDescription, details: nil))
       return
     }
 
@@ -513,16 +451,32 @@ class RoomPlanController: NSObject, RoomCaptureSessionDelegate, FlutterStreamHan
         "has_lidar": hasLidar,
       ] as [String: Any]
 
-    do {
-      let json = try RoomPlanJSONConverter.convertToJSON(
-        capturedRoom: finalResults, metadata: metadata)
-      flutterResult?(json)
-    } catch {
-      flutterResult?(
-        FlutterError(
-          code: "serialization_error", message: "Failed to serialize final room data.",
-          details: error.localizedDescription))
+    // Final processing of the raw capture data; runs off the main thread
+    Task.detached(priority: .userInitiated) { [weak self] in
+      let payload: Any
+      do {
+        let room = try await RoomBuilder(options: [.beautifyObjects]).capturedRoom(from: data)
+        do {
+          payload = try RoomPlanJSONConverter.convertToJSON(capturedRoom: room, metadata: metadata)
+        } catch {
+          payload = FlutterError(
+            code: "serialization_error", message: "Failed to serialize final room data.",
+            details: error.localizedDescription)
+        }
+      } catch {
+        payload = FlutterError(
+          code: "processing_failed", message: "Failed to process captured room data.",
+          details: error.localizedDescription)
+      }
+      await MainActor.run { self?.finish(payload) }
     }
+  }
+
+  /// Sends the final result to Flutter once, then dismisses the scanning UI.
+  private func finish(_ payload: Any) {
+    flutterResult?(payload)
+    flutterResult = nil
+    dismiss()
   }
 
   /// Called when the scanning session starts.
@@ -613,6 +567,8 @@ class RoomPlanController: NSObject, RoomCaptureSessionDelegate, FlutterStreamHan
       "iPhone15,2", "iPhone15,3",  // iPhone 14 Pro, 14 Pro Max
       "iPhone16,1", "iPhone16,2",  // iPhone 15 Pro, 15 Pro Max
       "iPhone17,1", "iPhone17,2",  // iPhone 16 Pro, 16 Pro Max
+      "iPhone18,1", "iPhone18,2",  // iPhone 17 Pro, 17 Pro Max
+      "iPhone19,2", "iPhone19,3", "iPhone19,7",  // iPhone 18 Pro, 18 Pro Max (19,3 US, 19,7 other regions)
     ]
 
     // iPad models with LiDAR
@@ -621,6 +577,8 @@ class RoomPlanController: NSObject, RoomCaptureSessionDelegate, FlutterStreamHan
       "iPad13,4", "iPad13,5", "iPad13,6", "iPad13,7", "iPad13,8", "iPad13,9", "iPad13,10",
       "iPad13,11",  // iPad Pro 11" (5th gen), 12.9" (5th gen)
       "iPad14,3", "iPad14,4", "iPad14,5", "iPad14,6",  // iPad Pro 11" (6th gen), 12.9" (6th gen)
+      "iPad16,3", "iPad16,4", "iPad16,5", "iPad16,6",  // iPad Pro 11" (M4), 13" (M4)
+      "iPad17,1", "iPad17,2", "iPad17,3", "iPad17,4",  // iPad Pro 11" (M5), 13" (M5)
     ]
 
     return lidarIPhones.contains(model) || lidarIPads.contains(model)

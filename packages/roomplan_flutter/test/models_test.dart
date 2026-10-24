@@ -31,12 +31,10 @@ void main() {
       const confidence = ScanConfidence(
         overall: 0.8,
         wallAccuracy: 0.9,
-        dimensionAccuracy: 0.7,
       );
 
       expect(confidence.overall, equals(0.8));
       expect(confidence.wallAccuracy, equals(0.9));
-      expect(confidence.dimensionAccuracy, equals(0.7));
     });
   });
 

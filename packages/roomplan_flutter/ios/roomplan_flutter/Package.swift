@@ -6,7 +6,7 @@ import PackageDescription
 let package = Package(
     name: "roomplan_flutter",
     platforms: [
-        .iOS("16.0")
+        .iOS("17.0")
     ],
     products: [
         .library(name: "roomplan-flutter", targets: ["roomplan_flutter"])
