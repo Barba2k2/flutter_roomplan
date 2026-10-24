@@ -27,21 +27,30 @@ class ScannerPage extends StatelessWidget {
         child: Consumer<ScannerViewModel>(
           builder: (context, viewModel, child) {
             final result = viewModel.currentScanResult;
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                ScannerCard(
-                  status: viewModel.scanStatus,
-                  isScanning: viewModel.isScanning,
-                  onStartScan: () {
-                    ScannerActionsHelper.startScan(context, viewModel);
-                  },
-                ),
-                const SizedBox(height: 20),
-                if (result != null) ScanDataCard(result: result),
-                const Spacer(),
-                const InstructionsCard(),
-              ],
+            return SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  ScannerCard(
+                    status: viewModel.scanStatus,
+                    isScanning: viewModel.isScanning,
+                    onStartScan: () {
+                      ScannerActionsHelper.startScan(viewModel);
+                    },
+                  ),
+                  const SizedBox(height: 20),
+                  if (result != null)
+                    ScanDataCard(
+                      result: result,
+                      onTap: () => ScannerActionsHelper.openResults(
+                        context,
+                        result,
+                      ),
+                    ),
+                  const SizedBox(height: 20),
+                  const InstructionsCard(),
+                ],
+              ),
             );
           },
         ),

@@ -1,24 +1,11 @@
+import 'package:example/helpers/top_banner_helper.dart';
 import 'package:example/viewmodels/advanced_scanning_view_model.dart';
-import 'package:example/widgets/advanced_scanning/configuration_dialog.dart';
 import 'package:example/widgets/advanced_scanning/scan_results_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:roomplan_flutter/roomplan_flutter.dart';
 
 class AdvancedScanningActionsHelper {
   AdvancedScanningActionsHelper._();
-
-  static void showConfigurationDialog(
-    BuildContext context,
-    AdvancedScanningViewModel viewModel,
-  ) {
-    showDialog(
-      context: context,
-      builder: (context) => ConfigurationDialog(
-        currentConfig: viewModel.selectedConfig,
-        onConfigurationChanged: viewModel.setConfiguration,
-      ),
-    );
-  }
 
   static void showResultsDialog(
     BuildContext context,
@@ -27,7 +14,25 @@ class AdvancedScanningActionsHelper {
   ) {
     showDialog(
       context: context,
-      builder: (context) => ScanResultsDialog(result: result, unit: unit),
+      builder: (context) {
+        return ScanResultsDialog(
+          result: result,
+          unit: unit,
+        );
+      },
+    );
+  }
+
+  static void toggleUnit(
+    BuildContext context,
+    AdvancedScanningViewModel vm,
+  ) {
+    vm.toggleUnit();
+    final isMetric = vm.selectedUnit == MeasurementUnit.metric;
+    TopBannerHelper.show(
+      context,
+      message: 'Units changed to ${isMetric ? 'Metric' : 'Imperial'}',
+      icon: isMetric ? Icons.straighten_rounded : Icons.architecture_rounded,
     );
   }
 }

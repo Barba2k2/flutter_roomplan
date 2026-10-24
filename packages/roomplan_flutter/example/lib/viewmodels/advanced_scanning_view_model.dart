@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:roomplan_flutter/roomplan_flutter.dart';
 
@@ -12,7 +13,6 @@ class AdvancedScanningViewModel extends ChangeNotifier {
   bool _isScanning = false;
   ScanResult? _currentResult;
   String _statusMessage = 'Checking compatibility...';
-  ScanConfiguration _selectedConfig = const ScanConfiguration();
 
   int _wallsDetected = 0;
   int _objectsDetected = 0;
@@ -26,7 +26,6 @@ class AdvancedScanningViewModel extends ChangeNotifier {
   bool get isScanning => _isScanning;
   ScanResult? get currentResult => _currentResult;
   String get statusMessage => _statusMessage;
-  ScanConfiguration get selectedConfig => _selectedConfig;
   int get wallsDetected => _wallsDetected;
   int get objectsDetected => _objectsDetected;
   int get doorsDetected => _doorsDetected;
@@ -48,11 +47,6 @@ class AdvancedScanningViewModel extends ChangeNotifier {
       _scanner.dispose();
     }
     super.dispose();
-  }
-
-  void setConfiguration(ScanConfiguration config) {
-    _selectedConfig = config;
-    notifyListeners();
   }
 
   void toggleUnit() {
@@ -84,19 +78,22 @@ class AdvancedScanningViewModel extends ChangeNotifier {
     _scanner = RoomPlanScanner();
 
     // Performance optimization: Throttle UI updates to prevent excessive rebuilds
-    _scanSubscription = _scanner.onScanResult
-        .where((result) => result != null)
-        .listen((result) {
-      _updateStatistics(result!);
-    });
+    _scanSubscription =
+        _scanner.onScanResult.where((result) => result != null).listen(
+      (result) {
+        _updateStatistics(result!);
+      },
+    );
 
     // Performance optimization: Update statistics on a timer to reduce UI rebuilds
-    _statisticsUpdateTimer =
-        Timer.periodic(const Duration(milliseconds: 500), (_) {
-      if (_isScanning) {
-        notifyListeners();
-      }
-    });
+    _statisticsUpdateTimer = Timer.periodic(
+      const Duration(milliseconds: 500),
+      (_) {
+        if (_isScanning) {
+          notifyListeners();
+        }
+      },
+    );
   }
 
   void _updateStatistics(ScanResult result) {
@@ -123,8 +120,7 @@ class AdvancedScanningViewModel extends ChangeNotifier {
     _startDurationTimer();
 
     try {
-      final result =
-          await _scanner.startScanning(configuration: _selectedConfig);
+      final result = await _scanner.startScanning();
 
       _isScanning = false;
       if (result != null) {
@@ -139,6 +135,7 @@ class AdvancedScanningViewModel extends ChangeNotifier {
       }
       notifyListeners();
     } catch (e) {
+      log('startScan failed: $e', name: 'AdvancedScanningViewModel');
       _isScanning = false;
       _statusMessage = _getErrorMessage(e);
       notifyListeners();
@@ -164,14 +161,17 @@ class AdvancedScanningViewModel extends ChangeNotifier {
   }
 
   void _startDurationTimer() {
-    _durationTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      if (_scanStartTime != null) {
-        final duration = DateTime.now().difference(_scanStartTime!);
-        _scanDuration = '${duration.inMinutes.toString().padLeft(2, '0')}:'
-            '${(duration.inSeconds % 60).toString().padLeft(2, '0')}';
-        notifyListeners();
-      }
-    });
+    _durationTimer = Timer.periodic(
+      const Duration(seconds: 1),
+      (timer) {
+        if (_scanStartTime != null) {
+          final duration = DateTime.now().difference(_scanStartTime!);
+          _scanDuration = '${duration.inMinutes.toString().padLeft(2, '0')}:'
+              '${(duration.inSeconds % 60).toString().padLeft(2, '0')}';
+          notifyListeners();
+        }
+      },
+    );
   }
 
   String _getErrorMessage(dynamic error) {

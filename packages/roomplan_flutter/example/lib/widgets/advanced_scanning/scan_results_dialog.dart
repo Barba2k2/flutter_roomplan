@@ -54,9 +54,6 @@ class ScanResultsDialog extends StatelessWidget {
             Text(
               '  Wall Accuracy: ${(result.confidence.wallAccuracy * 100).toStringAsFixed(1)}%',
             ),
-            Text(
-              '  Dimension Accuracy: ${(result.confidence.dimensionAccuracy * 100).toStringAsFixed(1)}%',
-            ),
           ],
         ),
       ),

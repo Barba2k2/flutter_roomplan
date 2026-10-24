@@ -6,49 +6,57 @@ import 'package:roomplan_flutter/roomplan_flutter.dart';
 class OpeningsDetailsView extends StatelessWidget {
   final ScanResult scanResult;
 
-  const OpeningsDetailsView({super.key, required this.scanResult});
+  const OpeningsDetailsView({
+    super.key,
+    required this.scanResult,
+  });
 
   @override
   Widget build(BuildContext context) {
-    final doors = scanResult.room.doors;
-    final windows = scanResult.room.windows;
+    final room = scanResult.room;
+    final items = [
+      ...room.doors.map(
+        (o) => (
+          'Door',
+          o,
+        ),
+      ),
+      ...room.windows.map(
+        (o) => (
+          'Window',
+          o,
+        ),
+      ),
+      ...room.openings.map(
+        (o) => (
+          'Opening',
+          o,
+        ),
+      ),
+    ];
 
-    if (doors.isEmpty && windows.isEmpty) {
-      return const Center(child: Text('No doors or windows detected.'));
+    if (items.isEmpty) {
+      return const Center(
+        child: Text('No doors, windows or openings detected.'),
+      );
     }
 
     return ListView(
       children: [
-        ...doors.map(
-          (door) => MeasurementCard(
-            title: 'Door',
+        for (final (label, opening) in items)
+          MeasurementCard(
+            title: label,
             details: [
               DetailRow(
                 title: 'Width',
-                value: '${door.width.toStringAsFixed(2)} m',
+                value: '${opening.width.toStringAsFixed(2)} m',
               ),
               DetailRow(
                 title: 'Height',
-                value: '${door.height.toStringAsFixed(2)} m',
+                value: '${opening.height.toStringAsFixed(2)} m',
               ),
             ],
           ),
-        ),
-        ...windows.map(
-          (window) => MeasurementCard(
-            title: 'Window',
-            details: [
-              DetailRow(
-                title: 'Width',
-                value: '${window.width.toStringAsFixed(2)} m',
-              ),
-              DetailRow(
-                title: 'Height',
-                value: '${window.height.toStringAsFixed(2)} m',
-              ),
-            ],
-          ),
-        ),
       ],
     );
   }

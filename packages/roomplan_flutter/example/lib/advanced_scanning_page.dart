@@ -1,6 +1,6 @@
 import 'package:example/helpers/advanced_scanning_actions_helper.dart';
+import 'package:example/helpers/top_banner_helper.dart';
 import 'package:example/viewmodels/advanced_scanning_view_model.dart';
-import 'package:example/widgets/advanced_scanning/configuration_card.dart';
 import 'package:example/widgets/advanced_scanning/status_card.dart';
 import 'package:example/widgets/advanced_scanning/statistics_card.dart';
 import 'package:example/widgets/advanced_scanning/unsupported_card.dart';
@@ -8,7 +8,7 @@ import 'package:example/widgets/advanced_scanning/unsupported_card.dart';
 import 'package:flutter/material.dart';
 import 'package:roomplan_flutter/roomplan_flutter.dart';
 
-/// Advanced scanning page demonstrating various configuration options and scenarios.
+/// Advanced scanning page demonstrating live statistics and unit switching.
 class AdvancedScanningPage extends StatefulWidget {
   const AdvancedScanningPage({super.key});
 
@@ -27,6 +27,7 @@ class _AdvancedScanningPageState extends State<AdvancedScanningPage> {
 
   @override
   void dispose() {
+    TopBannerHelper.dismiss();
     _viewModel.dispose();
     super.dispose();
   }
@@ -50,19 +51,9 @@ class _AdvancedScanningPageState extends State<AdvancedScanningPage> {
                   ),
                   tooltip:
                       'Switch to ${vm.selectedUnit == MeasurementUnit.metric ? 'Imperial' : 'Metric'} units',
-                  onPressed: vm.toggleUnit,
+                  onPressed: () =>
+                      AdvancedScanningActionsHelper.toggleUnit(context, vm),
                 ),
-              IconButton(
-                icon: const Icon(Icons.settings),
-                onPressed: vm.isSupported && !vm.isScanning
-                    ? () {
-                        AdvancedScanningActionsHelper.showConfigurationDialog(
-                          context,
-                          vm,
-                        );
-                      }
-                    : null,
-              ),
             ],
           ),
           body: Padding(
@@ -84,11 +75,6 @@ class _AdvancedScanningPageState extends State<AdvancedScanningPage> {
                     windowsDetected: vm.windowsDetected,
                     currentResult: vm.currentResult,
                     unit: vm.selectedUnit,
-                  ),
-                  const SizedBox(height: 16),
-                  ConfigurationCard(
-                    unit: vm.selectedUnit,
-                    config: vm.selectedConfig,
                   ),
                 ],
                 const Spacer(),

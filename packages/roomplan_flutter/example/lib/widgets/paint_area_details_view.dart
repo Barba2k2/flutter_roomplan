@@ -15,34 +15,43 @@ class PaintAreaDetailsView extends StatelessWidget {
       return const Center(child: Text('No walls detected.'));
     }
 
+    final storageByWall = PaintableAreaHelper.storageAreaByWall(
+      walls,
+      scanResult.room.objects,
+    );
     double totalPaintableArea = 0;
     final wallDetails = <Widget>[];
 
     for (int i = 0; i < walls.length; i++) {
       final wall = walls[i];
-      final wallArea = wall.width * wall.height;
-
-      double openingsArea = 0;
-      for (var opening in wall.openings) {
-        openingsArea += opening.width * opening.height;
-      }
-
-      final paintableArea = (wallArea - openingsArea).clamp(0, double.infinity);
+      final storageArea = storageByWall[wall.uuid] ?? 0;
+      final paintableArea = PaintableAreaHelper.paintableArea(
+        wall,
+        storageArea: storageArea,
+      );
       totalPaintableArea += paintableArea;
+      final deductions = {
+        'Doors': PaintableAreaHelper.openingsArea(wall, OpeningType.door),
+        'Windows': PaintableAreaHelper.openingsArea(wall, OpeningType.window),
+        'Openings': PaintableAreaHelper.openingsArea(wall, OpeningType.opening),
+        'Built-in cabinets': storageArea,
+      };
 
       wallDetails.add(
         MeasurementCard(
           title: 'Wall ${i + 1}',
           details: [
             DetailRow(
-              title: 'Total Area',
-              value: '${wallArea.toStringAsFixed(2)} m²',
+              title: 'Gross Area',
+              value:
+                  '${PaintableAreaHelper.grossArea(wall).toStringAsFixed(2)} m²',
             ),
-            DetailRow(
-              title: 'Openings Area',
-              value: '- ${openingsArea.toStringAsFixed(2)} m²',
-              valueColor: Colors.red.shade700,
-            ),
+            for (final MapEntry(:key, :value) in deductions.entries)
+              DetailRow(
+                title: key,
+                value: '- ${value.toStringAsFixed(2)} m²',
+                valueColor: Colors.red.shade700,
+              ),
             const Divider(),
             DetailRow(
               title: 'Paintable Area',
