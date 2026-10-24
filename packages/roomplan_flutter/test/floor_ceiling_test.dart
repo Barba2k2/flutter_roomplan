@@ -1,6 +1,6 @@
 import 'dart:convert';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:roomplan_flutter/src/mapper.dart';
+import 'package:roomplan_flutter/src/performance/optimized_mapper.dart';
 
 void main() {
   group('Floor and Ceiling parsing', () {
@@ -35,7 +35,7 @@ void main() {
         }
       };
 
-      final result = parseScanResult(json.encode(jsonMap));
+      final result = OptimizedMapper.parseScanResult(json.encode(jsonMap));
       expect(result, isNotNull);
       expect(result!.room.floor, isNotNull);
       expect(result.room.ceiling, isNotNull);
@@ -55,7 +55,7 @@ void main() {
         }
       };
 
-      final result = parseScanResult(json.encode(jsonMap));
+      final result = OptimizedMapper.parseScanResult(json.encode(jsonMap));
       expect(result, isNotNull);
       expect(result!.room.floor, isNull);
       expect(result.room.ceiling, isNull);
