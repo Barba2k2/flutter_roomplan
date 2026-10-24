@@ -1,6 +1,6 @@
 # roomplan_flutter — Analysis & Improvement Plan
 
-> v0.2.0 · iOS-only · Apple RoomPlan wrapper · LiDAR room scanning
+> v0.3.0 · iOS-only · Apple RoomPlan wrapper · LiDAR room scanning
 
 ## Package Summary
 

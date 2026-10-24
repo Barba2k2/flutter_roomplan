@@ -16,7 +16,7 @@ This document tracks every package planned for or shipped from this monorepo, al
 
 - **Status:** Stable
 - **Apple framework:** [RoomPlan](https://developer.apple.com/documentation/roomplan)
-- **Platforms:** iOS 16+
+- **Platforms:** iOS 17+
 - **Scope:** 3D parametric room scanning using LiDAR. Captures walls, doors, windows, openings, and bounding boxes for furniture / appliances. Exports USDZ.
 - **Why it exists:** Apple's first-party room-scanning framework has no Flutter binding; this plugin provides a typed Dart API plus dual unit support (metric / imperial) and performance helpers.
 - **Source:** [`packages/roomplan_flutter`](../packages/roomplan_flutter)
