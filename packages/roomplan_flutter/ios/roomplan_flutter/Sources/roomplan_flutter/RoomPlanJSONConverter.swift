@@ -4,7 +4,6 @@ import RoomPlan
 import os
 
 /// A utility to convert `CapturedRoom` objects into a JSON format.
-@available(iOS 16.0, *)
 struct RoomPlanJSONConverter {
   /// Converts a `CapturedRoom` object into a JSON string.
   static func convertToJSON(capturedRoom: CapturedRoom, metadata: [String: Any]) throws -> String? {

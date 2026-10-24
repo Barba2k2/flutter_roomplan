@@ -6,9 +6,7 @@ import Foundation
 import RoomPlan
 
 /// Comprehensive error types for RoomPlan operations with detailed debugging information
-@available(iOS 16.0, *)
 enum RoomPlanError: Error {
-    case unsupportedVersion
     case roomPlanNotSupported
     case cameraPermissionDenied
     case cameraPermissionNotDetermined
@@ -32,8 +30,6 @@ enum RoomPlanError: Error {
     /// Error code for Flutter communication
     var code: String {
         switch self {
-        case .unsupportedVersion:
-            return "unsupported_version"
         case .roomPlanNotSupported:
             return "roomplan_not_supported"
         case .cameraPermissionDenied:
@@ -78,8 +74,6 @@ enum RoomPlanError: Error {
     /// Human-readable error message
     var message: String {
         switch self {
-        case .unsupportedVersion:
-            return "iOS 16.0 or later is required for RoomPlan functionality."
         case .roomPlanNotSupported:
             return "RoomPlan is not supported on this device. A LiDAR sensor is required."
         case .cameraPermissionDenied:
@@ -124,8 +118,6 @@ enum RoomPlanError: Error {
     /// Additional debugging details
     var details: String? {
         switch self {
-        case .unsupportedVersion:
-            return "Current iOS version: \(UIDevice.current.systemVersion). Minimum required: 16.0"
         case .roomPlanNotSupported:
             return "Device model: \(UIDevice.current.model). RoomCaptureSession.isSupported: \(RoomCaptureSession.isSupported)"
         case .cameraPermissionDenied, .cameraPermissionNotDetermined, .cameraPermissionUnknown:
@@ -153,8 +145,6 @@ enum RoomPlanError: Error {
     /// Recovery suggestions for the user
     var recoverySuggestion: String? {
         switch self {
-        case .unsupportedVersion:
-            return "Update your device to iOS 16.0 or later to use room scanning."
         case .roomPlanNotSupported:
             return "Use a device with a LiDAR sensor (iPhone 12 Pro or newer Pro models, iPad Pro with LiDAR)."
         case .cameraPermissionDenied:
@@ -245,7 +235,6 @@ extension ProcessInfo.ThermalState {
 /// - Starting and stopping the `RoomCaptureSession`.
 /// - Handling the `RoomCaptureSessionDelegate` events.
 /// - Acting as a `FlutterStreamHandler` to send real-time scan updates to Flutter.
-@available(iOS 16.0, *)
 class RoomPlanController: NSObject, RoomCaptureSessionDelegate, FlutterStreamHandler, UIAdaptivePresentationControllerDelegate {
   /// The shared singleton instance.
   static let shared = RoomPlanController()
@@ -358,19 +347,13 @@ class RoomPlanController: NSObject, RoomCaptureSessionDelegate, FlutterStreamHan
       }
     }
     
-    // Note: RoomCaptureSession.Configuration in iOS 16.0 has limited customization options
-    // Most configuration will be handled at the app level for now
+    // Note: the options above do not change the native configuration yet; the default is returned
     
     return configuration
   }
   
   /// Performs comprehensive pre-flight checks before starting a scan
   private func performPreflightChecks() throws {
-    // Check iOS version
-    guard #available(iOS 16.0, *) else {
-      throw RoomPlanError.unsupportedVersion
-    }
-    
     // Check RoomPlan availability
     guard RoomCaptureSession.isSupported else {
       throw RoomPlanError.roomPlanNotSupported
@@ -613,6 +596,8 @@ class RoomPlanController: NSObject, RoomCaptureSessionDelegate, FlutterStreamHan
       "iPhone15,2", "iPhone15,3",  // iPhone 14 Pro, 14 Pro Max
       "iPhone16,1", "iPhone16,2",  // iPhone 15 Pro, 15 Pro Max
       "iPhone17,1", "iPhone17,2",  // iPhone 16 Pro, 16 Pro Max
+      "iPhone18,1", "iPhone18,2",  // iPhone 17 Pro, 17 Pro Max
+      "iPhone19,2", "iPhone19,3", "iPhone19,7",  // iPhone 18 Pro, 18 Pro Max (19,3 US, 19,7 other regions)
     ]
 
     // iPad models with LiDAR
@@ -621,6 +606,8 @@ class RoomPlanController: NSObject, RoomCaptureSessionDelegate, FlutterStreamHan
       "iPad13,4", "iPad13,5", "iPad13,6", "iPad13,7", "iPad13,8", "iPad13,9", "iPad13,10",
       "iPad13,11",  // iPad Pro 11" (5th gen), 12.9" (5th gen)
       "iPad14,3", "iPad14,4", "iPad14,5", "iPad14,6",  // iPad Pro 11" (6th gen), 12.9" (6th gen)
+      "iPad16,3", "iPad16,4", "iPad16,5", "iPad16,6",  // iPad Pro 11" (M4), 13" (M4)
+      "iPad17,1", "iPad17,2", "iPad17,3", "iPad17,4",  // iPad Pro 11" (M5), 13" (M5)
     ]
 
     return lidarIPhones.contains(model) || lidarIPads.contains(model)
