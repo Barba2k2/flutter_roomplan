@@ -1,14 +1,20 @@
 ## 0.3.0
 
-- **BREAKING**: minimum iOS raised from 16 to 17 (podspec, Swift Package, example app). Required for RoomPlan APIs introduced in iOS 17 (`parentIdentifier`, `polygonCorners`, `floors`).
+- **BREAKING**: minimum iOS raised from 16 to 17 (podspec, Swift Package, example app). Required for `Surface.parentIdentifier`.
 - **BREAKING(Dart)**: Removed `UnsupportedVersionException` (and the native `unsupported_version` error code); it can no longer be thrown now that iOS 17 is the minimum.
-- **BREAKING(Dart)**: Removed decorative API that never affected scanning: `ScanConfiguration` (all fields and the `fast`/`accurate`/`minimal` presets), `ScanQuality`, the `configuration` parameter of `RoomPlanScanner.startScanning`, `ScanConfidence.dimensionAccuracy` (was only the average object confidence) and `ScanConfidence.warnings` (never filled), `ScanMetadata.scanDate` (always the parse time) and `unknownConfidence`. Native sessions always use the default `RoomCaptureSession.Configuration`.
-- **Feature**: Wall openings nested: native nests each door/window/opening under its wall via `Surface.parentIdentifier` (top-level arrays unchanged), so `WallData.openings` is filled, now including `OpeningType.opening`. New `PaintableAreaHelper` (gross wall area, per-type opening area, built-in storage area per wall, paintable area clamped at 0).
+- **BREAKING(Dart)**: Removed `ScanConfiguration` (all fields and the `fast`/`accurate`/`minimal` presets), `ScanQuality` and the `configuration` parameter of `RoomPlanScanner.startScanning`; none of it reached the native side, which always uses the default `RoomCaptureSession.Configuration`.
+- **BREAKING(Dart)**: Removed `ScanConfidence.dimensionAccuracy` (was only the average object confidence), `ScanConfidence.warnings` (never filled), `ScanMetadata.scanDate` (always the parse time) and `unknownConfidence`.
+- **Feature**: Final result is now built with `RoomBuilder` (`.beautifyObjects`) from the captured data, instead of using the raw session result.
+- **Feature**: Wall openings nested: native nests each door/window/opening under its wall via `Surface.parentIdentifier` (top-level arrays unchanged), so `WallData.openings` is filled, now including `OpeningType.opening`.
+- **Feature**: New public `PaintableAreaHelper`: gross wall area, per-type opening area, built-in storage area per wall, paintable area clamped at 0.
 - **Feature**: Added iPhone 17 Pro/Pro Max, iPhone 18 Pro/Pro Max, and iPad Pro M4/M5 (11" and 13") to LiDAR device detection.
-- **Chore(iOS)**: Remove now-redundant `@available(iOS 16.0, *)` annotations and iOS 16 runtime guards; bump podspec version to 0.3.0.
-- **Chore(Dart)**: Removed internal `lib/src/mapper.dart` (including the legacy parser `parseScanResultLegacy`); `OptimizedMapper` is the only parser.
 - **Fix(Dart)**: Walls, doors and windows now map `dimensions` as Apple surfaces (x = width, y = height, z = thickness) instead of the room convention, which made surface `width` read the ~0 thickness and broke wall/opening areas. Room, floor, ceiling and object mapping unchanged.
-- **Fix**: Room and floor/ceiling length/width are measured in the room's own axes (longest-wall frame) instead of the ARKit world-axis bounding box, which overestimated rotated rooms. Synthetic floor/ceiling now send width in `z` (was `y`, so floor width and floor area read 0). Debug builds log the raw native JSON and per-wall dimensions under `RoomPlanScan`.
+- **Fix**: Room and floor/ceiling length/width are measured from the wall endpoints in the room's own axes (longest-wall frame) instead of the ARKit world-axis bounding box, which overestimated rotated rooms.
+- **Fix**: Synthetic floor/ceiling now send width in `z` (was `y`, so floor width and floor area read 0).
+- **Fix(iOS)**: Camera permission is requested on first use (`AVCaptureDevice.requestAccess`); before, the status stayed `notDetermined` and the scan never started.
+- **Chore(iOS)**: Removed now-redundant `@available(iOS 16.0, *)` annotations and iOS 16 runtime guards; podspec version 0.3.0. Debug builds log the raw native JSON and per-wall dimensions under `RoomPlanScan`.
+- **Chore(Dart)**: Removed internal `lib/src/mapper.dart` (including the legacy parser `parseScanResultLegacy`); `OptimizedMapper` is the only parser.
+- **Chore(example)**: iOS 17 target and UIScene lifecycle migration; advanced scanning page split into view model, helpers and widgets, with paintable area breakdown, openings list and tappable scan results.
 
 ## 0.2.1
 
