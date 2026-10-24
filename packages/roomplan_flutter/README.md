@@ -4,7 +4,7 @@ A Flutter plugin that allows you to use Apple's [RoomPlan API](https://developer
 
 ## Requirements
 
-- iOS 16.0+
+- iOS 17.0+
 - A device with a LiDAR sensor is required (e.g., iPhone 12 Pro or newer Pro models, iPhone 16 Pro/Pro Max, iPad Pro).
 
 ## Installation
@@ -123,7 +123,7 @@ class _ScannerWidgetState extends State<ScannerWidget> {
           padding: EdgeInsets.all(16.0),
           child: Text(
             'RoomPlan is not supported on this device.\n'
-            'Requires iOS 16+ and LiDAR sensor.',
+            'Requires iOS 17+ and LiDAR sensor.',
             textAlign: TextAlign.center,
           ),
         ),
@@ -158,7 +158,7 @@ Before starting a scan, you should check if the device supports RoomPlan:
 final isSupported = await RoomPlanScanner.isSupported();
 if (!isSupported) {
   // Show appropriate message to user
-  print('RoomPlan requires iOS 16+ and a LiDAR-enabled device');
+  print('RoomPlan requires iOS 17+ and a LiDAR-enabled device');
 }
 ```
 
@@ -342,9 +342,9 @@ Refer to the source code for detailed information on all fields.
 
 **"RoomPlan is not supported"**
 
-- Ensure your device has iOS 16.0 or later
+- Ensure your device has iOS 17.0 or later
 - Verify your device has a LiDAR sensor (iPhone 12 Pro+, iPad Pro with LiDAR)
-- Check that your app's deployment target is set to iOS 16.0+
+- Check that your app's deployment target is set to iOS 17.0+
 
 **Camera permission denied**
 
@@ -429,7 +429,6 @@ Refer to the source code for detailed information on all fields.
 #### Device & Platform
 
 - `RoomPlanNotAvailableException` - RoomPlan not supported
-- `UnsupportedVersionException` - iOS version too old
 - `ARKitNotSupportedException` - ARKit not available
 - `InsufficientHardwareException` - Device lacks required hardware
 
@@ -466,7 +465,7 @@ Refer to the source code for detailed information on all fields.
 
 To properly test the Flutter RoomPlan package, you need a device with:
 
-- **iOS 16.0 or later**
+- **iOS 17.0 or later**
 - **LiDAR sensor**
 
 #### Compatible Devices:
@@ -476,6 +475,8 @@ To properly test the Flutter RoomPlan package, you need a device with:
 - iPhone 14 Pro / Pro Max
 - iPhone 15 Pro / Pro Max
 - iPhone 16 Pro / Pro Max
+- iPhone 17 Pro / Pro Max
+- iPhone 18 Pro / Pro Max
 - iPad Pro 11-inch (4th generation and later)
 - iPad Pro 12.9-inch (5th generation and later)
 
@@ -488,7 +489,7 @@ These devices will return `isSupported() = false`:
 - iPhone 14 / 14 Plus
 - iPhone 15 / 15 Plus
 - iPhone 16 / 16 Plus
-- Any device running iOS < 16.0
+- Any device running iOS < 17.0
 
 ## Testing Checklist
 

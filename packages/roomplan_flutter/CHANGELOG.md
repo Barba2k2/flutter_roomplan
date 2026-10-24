@@ -1,3 +1,10 @@
+## 0.3.0
+
+- **BREAKING**: minimum iOS raised from 16 to 17 (podspec, Swift Package, example app). Required for RoomPlan APIs introduced in iOS 17 (`parentIdentifier`, `polygonCorners`, `floors`).
+- **BREAKING(Dart)**: Removed `UnsupportedVersionException` (and the native `unsupported_version` error code); it can no longer be thrown now that iOS 17 is the minimum.
+- **Feature**: Added iPhone 17 Pro/Pro Max, iPhone 18 Pro/Pro Max, and iPad Pro M4/M5 (11" and 13") to LiDAR device detection.
+- **Chore(iOS)**: Remove now-redundant `@available(iOS 16.0, *)` annotations and iOS 16 runtime guards; bump podspec version to 0.3.0.
+
 ## 0.2.1
 
 - **Fix(iOS)**: Handle swipe-to-dismiss on RoomPlan UI via `UIAdaptivePresentationControllerDelegate` — the Dart `Future` from `startScanning()` now always completes instead of hanging forever.

@@ -4,7 +4,7 @@
 
 ## Package Summary
 
-Flutter plugin wrapping Apple RoomPlan API (iOS 16+). Captures 3D room scans via LiDAR,
+Flutter plugin wrapping Apple RoomPlan API (iOS 17+). Captures 3D room scans via LiDAR,
 detecting walls, doors, windows, openings, furniture objects, floor, and ceiling — all
 with dimensions, 3D positions, transforms, and confidence levels.
 
@@ -45,8 +45,7 @@ with dimensions, 3D positions, transforms, and confidence levels.
 6. **`ScanConfiguration` fields ignored on native side**  
    `detectFurniture`, `detectDoors`, `detectWindows`, `minimumConfidence`,
    `enableAdvancedSurfaceDetection`, `timeoutSeconds`, `enableRealtimeUpdates` — ALL
-   silently ignored. `createConfiguration()` returns a default config with a comment
-   acknowledging iOS 16 has limited options. Client expects them to work.
+   silently ignored. `createConfiguration()` returns a default config with a comment saying the options are not applied yet. Client expects them to work.
 
 ### Thread Safety
 
@@ -68,8 +67,8 @@ with dimensions, 3D positions, transforms, and confidence levels.
 | `pause()` / `resume()` | 17.0 | ❌ Not exposed |
 | `visualizationMode` customization | 17.0 | ❌ Not exposed |
 | `didProvide:command:` delegate | 17.0 | ❌ Not exposed |
-| Thermal state monitoring | 16.0 | ❌ Not exposed |
-| Session state query (isRunning, isPaused) | 16.0 | ❌ Not exposed |
+| Thermal state monitoring | 17.0 | ❌ Not exposed |
+| Session state query (isRunning, isPaused) | 17.0 | ❌ Not exposed |
 
 ## Dependency
 
