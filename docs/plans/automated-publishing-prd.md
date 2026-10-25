@@ -1,17 +1,17 @@
 # PRD: automated publishing of `roomplan_flutter` (and future siblings) to pub.dev
 
-Date: 2026-10-24. Status: plan only, nothing implemented. Convention: lives in `docs/plans/`, same format as `object-capture-package-plan.md`. Facts below were checked on 2026-10-24 against the sources linked inline; anything not found in a source is marked **UNVERIFIED**.
+Date: 2026-10-24. Status: implemented 2026-10-24 (publish via tag push proven; auto-tag flow not yet run). Convention: lives in `docs/plans/`, same format as `object-capture-package-plan.md`. Facts below were checked on 2026-10-24 against the sources linked inline; anything not found in a source is marked **UNVERIFIED**.
 
 ## 1. Goal
 
-Publish a package version to pub.dev by pushing one git tag, from GitHub Actions, with no interactive Google login and no long-lived secret. The workflow refuses to publish when the tag, `pubspec.yaml`, `CHANGELOG.md`, analyzer or tests disagree. The same setup must scale to more packages in `packages/` by copying one small workflow file.
+Publish a package version to pub.dev by merging a version bump to `master`, from GitHub Actions (the workflow creates the tag itself, no approval, no manual step), with no interactive Google login and no long-lived secret. The workflow refuses to publish when the tag, `pubspec.yaml`, `CHANGELOG.md`, analyzer or tests disagree. The same setup must scale to more packages in `packages/` by copying one small workflow file.
 
 ## 2. Non-goals
 
 - Publishing the first version of a new package (not automatable, see 3).
-- Auto-bumping versions, generating changelogs or tagging from CI (melos `version` stays a local, manual tool).
+- Auto-bumping versions or generating changelogs from CI (melos `version` stays a local, manual tool). Tagging IS automated (see 5.2).
 - Running the iOS example build or any macOS job in CI.
-- Publishing from branches, schedules, PR events or `workflow_dispatch` (see 6).
+- Publishing from branch runs, schedules or PR events. Publishing only ever runs on a tag ref (see 6).
 - Fixing unrelated repo oddities (see 11).
 
 ## 3. Current state and pain
@@ -60,18 +60,29 @@ Pin by commit SHA with a version comment. Re-check versions on the day the workf
 
 ### 5.2 Workflow (`.github/workflows/publish-roomplan-flutter.yml`)
 
-Triggers: `push` of tags matching 5.1, plus `workflow_dispatch` used only as a dry run (see 7, step R1).
+Triggers: `push` to `master` limited to `paths: [packages/roomplan_flutter/pubspec.yaml]`, `push` of tags matching 5.1, and `workflow_dispatch` (dry run on a branch ref, publish on a tag ref).
+
+Release mechanism (owner decision 2026-10-24: everything automated, no approval gate, no manual tag):
+
+1. A PR bumping `version` merges to `master`; the `master` push starts job `tag`.
+2. `tag` (`contents: write`, `actions: write`, default `GITHUB_TOKEN`) reads the version from `pubspec.yaml`, builds `roomplan_flutter-v<version>`, exits successfully if that tag already exists on the remote, otherwise creates it at the pushed commit and pushes it.
+3. Tag pushes made with `GITHUB_TOKEN` do NOT trigger push workflows (GitHub rule), so `tag` then runs `gh workflow run publish-roomplan-flutter.yml --ref <tag>`; `workflow_dispatch` via `GITHUB_TOKEN` is allowed. That run has `github.ref_type == 'tag'`, so `verify` and `publish` run for real.
+4. `verify` and `publish` are skipped on the `master` push event itself (`github.event_name != 'push' || github.ref_type == 'tag'`). A manually pushed tag still triggers them directly.
+5. A `workflow_dispatch` on a branch stays a dry run (no tag ref: no environment, no `pub publish`).
+
+Status: publishing via tag push is **verified** (tag `roomplan_flutter-v0.3.0+2` published through OIDC). Auto-tag plus dispatch-on-tag is **UNVERIFIED** until the first merge runs it end to end. The `paths` filter combined with the `tags` filter in one `push` is also unverified (GitHub documents that path filters are not evaluated for tag pushes).
 
 Jobs:
 
+0. `tag` (master push only): see above.
 1. `verify` (ubuntu, `contents: read`): checkout, Flutter stable via `subosito/flutter-action` (with cache), then gates:
    - tag version equals `pubspec.yaml` `version` (tag with the `roomplan_flutter-v` prefix stripped). pub.dev also enforces this, but failing here gives a clearer error before any approval is requested;
    - `CHANGELOG.md` has a `## <version>` heading;
    - `flutter analyze`;
    - `flutter test` in `packages/roomplan_flutter`.
-2. `publish`: own job (the dart-lang reusable workflow was dropped, see section 3: it has no `test-run`/`use-flutter` inputs, so it caused `startup_failure`, and it cannot dry-run). `needs: verify`, `permissions: contents: read, id-token: write`, `environment` only on tag runs (`github.ref_type == 'tag' && 'pub.dev' || null`, so `workflow_dispatch` dry runs need no approval). Steps: checkout, `dart-lang/setup-dart` (provisions the OIDC token), `subosito/flutter-action`, `flutter pub get`, `flutter pub publish --dry-run`, then on tags only `flutter pub publish --force`.
+2. `publish`: own job (the dart-lang reusable workflow was dropped, see section 3: it has no `test-run`/`use-flutter` inputs, so it caused `startup_failure`, and it cannot dry-run). `needs: verify`, `permissions: contents: read, id-token: write`, `environment` only on tag runs (`github.ref_type == 'tag' && 'pub.dev' || null`; the environment has no required reviewers, so nothing waits for approval, and branch dry runs skip it). Steps: checkout, `dart-lang/setup-dart` (provisions the OIDC token), `subosito/flutter-action`, `flutter pub get`, `flutter pub publish --dry-run`, then on tags only `flutter pub publish --force`.
 
-Draft (to be validated, not yet run):
+Draft (simplified; the file `.github/workflows/publish-roomplan-flutter.yml` is the source of truth, the `tag` job and the `if:` guards are only there):
 
 ```yaml
 name: Publish roomplan_flutter
@@ -141,8 +152,8 @@ Page: `pub.dev/packages/roomplan_flutter/admin`, section Automated publishing > 
 | Repository | `Barba2k2/flutter_roomplan` | exact `<owner>/<repository>`; pub.dev rejects other repos |
 | Tag pattern | `roomplan_flutter-v{{version}}` | see 5.1 |
 | Enable publishing from `push` events | **checked** | the only trigger the flow uses |
-| Enable publishing from `workflow_dispatch` events | **unchecked** | it still requires a tag ref (source above), so it adds no capability; the dry run in the workflow does not need pub.dev to allow it (`pub publish --dry-run` never publishes). Fewer ways to publish = smaller attack surface |
-| Require GitHub Actions environment | **checked**, name `pub.dev` | gives a manual approval gate and a token-bound control that a workflow edit cannot bypass |
+| Enable publishing from `workflow_dispatch` events | **checked** | the `tag` job starts the publish run with `gh workflow run --ref <tag>` because `GITHUB_TOKEN` tag pushes do not trigger push workflows; pub.dev still requires a tag ref for dispatch (source above), so branch dispatches cannot publish |
+| Require GitHub Actions environment | **checked**, name `pub.dev` | token-bound control that a workflow edit cannot bypass; the GitHub environment has NO required reviewers (no approval gate, owner decision) and its deployment policy allows tags `roomplan_flutter-v*` and branch `master` |
 | Enable manual publishing (separate section) | **unchecked, but only after the first successful automated release** | pub.dev recommends disabling it; keep it on until R3 proves the pipeline, otherwise a broken CI locks out releases |
 
 ## 7. Release flow (per version)
@@ -150,17 +161,15 @@ Page: `pub.dev/packages/roomplan_flutter/admin`, section Automated publishing > 
 1. Branch; bump `version` in `packages/roomplan_flutter/pubspec.yaml`; add `## <version>` to `CHANGELOG.md`; update README snippet if it names a version. Open PR.
 2. CI gates run on the PR (see 9: a cheap PR workflow is optional; the tag run re-runs the same gates anyway).
 3. Squash merge to `master` (repo rule: squash only).
-4. From updated `master`: `git tag roomplan_flutter-v<version>` then `git push origin roomplan_flutter-v<version>`. The tag must point at the merge commit that contains the bump.
-5. `verify` runs, then `publish` pauses for approval in the `pub.dev` environment. Owner approves in the Actions UI.
-6. Workflow publishes. Check the pub.dev audit log (links to the run) and the package page; confirm README/changelog render as intended.
+4. Nothing else. The `master` push runs job `tag`, which creates `roomplan_flutter-v<version>` at the merge commit and dispatches the workflow on it; `verify` then `publish` run with no approval.
+5. Check the pub.dev audit log (links to the run) and the package page; confirm README/changelog render as intended.
 
 The rest of the loop (delete nothing, branch kept after merge) follows the owner's standing git rules.
 
 ## 8. Security
 
 - OIDC only; no pub.dev credentials, tokens or service-account keys in GitHub secrets.
-- Who can publish = who can push a matching tag AND approve the `pub.dev` environment. Configure:
-  - GitHub environment `pub.dev` with required reviewer = owner. Recommendation for a solo owner: keep "prevent self-review" off, otherwise nobody can approve (**UNVERIFIED** GitHub setting name/default; check in the UI).
+- Who can publish = who can merge to `master` (or push a matching tag). There is no approval gate by owner decision. The GitHub environment `pub.dev` exists only to bind the OIDC token to it; its deployment policy allows tags `roomplan_flutter-v*` and branch `master`. Configure:
   - Restrict tag creation for `roomplan_flutter-v*` to admins. GitHub's older "tag protection rules" may be superseded by repository rulesets (**UNVERIFIED**, not checked); use whichever the repo settings offer. dart.dev names tag protection and environments as the two hardening options.
 - Actions pinned by commit SHA, so a moved tag upstream cannot change what runs. Dependabot for `github-actions` can bump them (optional, not part of this PRD).
 - `verify` job has `contents: read` only; only `publish` has `id-token: write`.
@@ -168,7 +177,7 @@ The rest of the loop (delete nothing, branch kept after merge) follows the owner
 
 ## 9. Cost (GitHub Actions minutes)
 
-- The workflow runs only on a tag push (a few times per month at most) plus manual dry runs. No PR or push-to-branch trigger in v1.
+- The workflow runs on a `master` push touching `packages/roomplan_flutter/pubspec.yaml` (only the cheap `tag` job), the resulting tag run, and manual dry runs. No PR trigger in v1.
 - Expected run: Linux runner, roughly 5 to 8 minutes (analyze + test + dry-run + archive; estimate, not measured). Linux only, no macOS (macOS minutes cost far more on private repos, **UNVERIFIED** multiplier).
 - Repo is public; standard GitHub-hosted runners are free for public repositories per GitHub billing docs (**UNVERIFIED**, not re-fetched today). The owner's concern about minutes on other (private) repos does not apply here, but the design stays cheap anyway.
 - Optional later: a PR workflow running `verify` only. Not in scope; add only if a bad PR slips through.
@@ -180,7 +189,7 @@ The rest of the loop (delete nothing, branch kept after merge) follows the owner
 | Tag does not match filter | no run | check glob (trailing `*`), recreate tag |
 | Tag version differs from pubspec | `verify` fails (or pub.dev rejects with "Expected tag …") | fix on `master`; delete the wrong **tag** and retag (the tag, not a branch) |
 | Gate fails (analyze/test/CHANGELOG) | nothing published | fix via PR, move tag to the new commit: delete remote tag, retag, push |
-| Approval rejected or never given | nothing published | re-run or retag |
+| `tag` job fails to dispatch | tag exists but nothing published | `gh workflow run publish-roomplan-flutter.yml --ref <tag>` by hand (or Actions UI, Run workflow on the tag) |
 | OIDC/permission error from pub.dev | run fails at publish, nothing published | read log; confirm repo, pattern, environment name, push-events checkbox |
 | Own `publish` job fails on the Flutter plugin/workspace or the OIDC token | `publish` fails at dry run or publish | read log; confirm `id-token: write`, setup-dart before flutter-action, pub.dev admin settings |
 | Bad version already published | cannot be republished or deleted | publish a fixed version (`+1` or patch); retract the bad one within 7 days (restorable within 7 days) |
@@ -190,17 +199,17 @@ Rule: if `verify` is green, the failure is almost always in pub.dev settings, no
 
 ## 11. Rollout plan
 
-- **R0 (settings, no code):** create GitHub environment `pub.dev` with owner as required reviewer; apply the tag-creation restriction; set pub.dev admin fields per section 6 except leave manual publishing on.
+- **R0 (settings, no code):** create GitHub environment `pub.dev` without required reviewers (deployment policy: tags `roomplan_flutter-v*` and branch `master`); apply the tag-creation restriction; set pub.dev admin fields per section 6 except leave manual publishing on.
 - **R1 (dry run, no publish):** merge the workflow file; run it via `workflow_dispatch` (no tag, so no environment approval and no publish). Must show: `verify` green, `publish` green through `flutter pub publish --dry-run`. Fix the UNVERIFIED items in 5.2 here.
-- **R2 (guarded negative test):** push a deliberately wrong tag on a throwaway commit (for example `roomplan_flutter-v9.9.9` where pubspec says otherwise) and confirm `verify` fails before the approval step, nothing published. Delete the tag afterwards. Only do this with the environment gate active, so a mistake cannot publish.
+- **R2 (guarded negative test):** push a deliberately wrong tag on a throwaway commit (for example `roomplan_flutter-v9.9.9` where pubspec says otherwise) and confirm `verify` fails before `publish`, nothing published. Delete the tag afterwards. `verify` fails before `publish`, so a mistake cannot publish.
 - **R3 (real release):** next real version goes through the flow in section 7. Verify the pub.dev audit log entry and package page. Then uncheck "Enable manual publishing".
 - **R4:** document the release steps in `CONTRIBUTING.md` (3 lines) and copy the workflow for the next package when it exists (after its manual first publish).
 
 ## 12. Acceptance criteria
 
-- Pushing `roomplan_flutter-v<version>` for a bumped, merged version publishes exactly that version to pub.dev after one approval click, with no local login.
+- Merging a version bump to `master` publishes exactly that version to pub.dev with no approval, no manual tag and no local login.
 - A wrong-version, missing-CHANGELOG, analyze-failing or test-failing tag publishes nothing and fails before the approval step.
-- `workflow_dispatch` and branch pushes can never publish.
+- Branch pushes and branch `workflow_dispatch` runs can never publish (the `master` push only creates the tag).
 - No secret exists in the repo settings for pub.dev.
 - The pub.dev audit log entry links to the Actions run.
 - A `+1` build-metadata version (for example `0.3.1+1`) is covered by the filter and the pattern (verify with one dry-run tag name against the glob; a real `+1` publish is not required to accept this PRD).
@@ -208,7 +217,7 @@ Rule: if `verify` is green, the failure is almost always in pub.dev settings, no
 
 ## 13. Decisions that belong to the owner
 
-1. **Approval gate (environment with required reviewer):** recommend YES. Costs one click per release, protects against a leaked account or a mistaken tag. Skipping it means anyone with push access can publish permanently.
+1. **Approval gate:** DECIDED 2026-10-24: none. Everything automated; merging a version bump publishes. Risk accepted: anyone who can merge to `master` can publish permanently.
 2. **Disable manual `flutter pub publish` after the first good automated release:** recommend YES, after R3. Removes the interactive path that produced the `0.3.0` stale-README slip.
 3. **Tag prefix per package (`roomplan_flutter-v…`) instead of plain `v…`:** recommend per-package prefix, because the repo is a workspace meant to hold more packages. Cost: the old `v0.1.4` style is abandoned.
 
