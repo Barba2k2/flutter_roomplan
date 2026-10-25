@@ -76,18 +76,20 @@ Naming convention: `flutter_<framework>` for new packages (e.g. `flutter_object_
 
 ## Releasing
 
-Each package is versioned independently. Tags follow the pattern `<package_name>-v<version>` (e.g. `roomplan_flutter-v0.3.0`).
+Each package is versioned independently. Tags follow the pattern `<package_name>-v<version>` (e.g. `roomplan_flutter-v0.3.0`). Publishing to pub.dev runs from GitHub Actions on a tag push; no local login is needed.
+
+1. Bump `version` in the package's `pubspec.yaml`, add a `## <version>` entry to its `CHANGELOG.md`, and merge to the default branch.
+2. From the updated default branch, tag and push:
 
 ```bash
-# Stage release commits and bump versions based on conventional commits
-melos version
-
-# Publish to pub.dev (dry run first!)
-melos publish --dry-run
-melos publish --no-dry-run
+git tag roomplan_flutter-v<version> && git push origin roomplan_flutter-v<version>
 ```
 
-Never publish manually with `flutter pub publish` from inside a package directory unless you know exactly what you're doing — Melos coordinates the dependency rewrites that pub.dev expects.
+3. The workflow verifies the tag against `pubspec.yaml` and `CHANGELOG.md`, runs analyze and tests, then waits for approval in the `pub.dev` environment. Approve it in the Actions UI to publish.
+
+To test the pipeline without publishing, run the "Publish roomplan_flutter" workflow manually (`workflow_dispatch`); it only does a dry run.
+
+Do not publish manually with `flutter pub publish`; pub.dev versions cannot be republished or deleted.
 
 ## Code review checklist
 
