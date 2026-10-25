@@ -9,7 +9,7 @@ The goal is to ship one focused, independently versioned plugin per Apple framew
 | Package | Apple framework(s) | pub.dev | Status |
 | --- | --- | --- | --- |
 | [`roomplan_flutter`](packages/roomplan_flutter) | RoomPlan | [pub.dev](https://pub.dev/packages/roomplan_flutter) | Stable |
-| `flutter_object_capture` | RealityKit Object Capture (PhotogrammetrySession) | — | Planned |
+| [`flutter_object_capture`](packages/flutter_object_capture) | RealityKit Object Capture (PhotogrammetrySession) | — | In progress |
 | `flutter_realitykit` | RealityKit | — | Planned |
 | `flutter_apple_vision` | Vision | — | Planned |
 | `flutter_visionkit` | VisionKit | — | Planned |
