@@ -1,3 +1,7 @@
+## 0.3.0+1
+
+- **Docs**: Fix the stale installation snippet in the README (was ^0.1.1, now ^0.3.0). No code changes.
+
 ## 0.3.0
 
 - **BREAKING**: minimum iOS raised from 16 to 17 (podspec, Swift Package, example app). Required for `Surface.parentIdentifier`.
