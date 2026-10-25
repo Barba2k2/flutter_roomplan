@@ -32,8 +32,20 @@ jobs:
     permissions:
       contents: read
       id-token: write
-    uses: dart-lang/setup-dart/.github/workflows/publish.yml@6afc89df92d6eb3834022f73cd65adc8cdfcb92d # v1.8.1
-    with:
-      environment: pub.dev
-      working-directory: packages/roomplan_flutter
-      test-run: ${{ github.event_name == 'workflow_dispatch' }}
+    runs-on: ubuntu-latest
+    environment: ${{ github.ref_type == 'tag' && 'pub.dev' || null }}
+    defaults:
+      run:
+        working-directory: packages/roomplan_flutter
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: dart-lang/setup-dart@6afc89df92d6eb3834022f73cd65adc8cdfcb92d # v1.8.1
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
+        with:
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - run: flutter pub publish --dry-run
+      - name: Publish
+        if: github.ref_type == 'tag'
+        run: flutter pub publish --force
