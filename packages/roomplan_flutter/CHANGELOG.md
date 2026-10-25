@@ -1,3 +1,7 @@
+## 0.3.0+3
+
+- **Chore**: Releases are now tagged and published automatically when the version changes on master. No code changes.
+
 ## 0.3.0+2
 
 - **Chore**: First release published through the automated GitHub Actions workflow. No code changes.
