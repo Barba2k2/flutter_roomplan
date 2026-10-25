@@ -23,7 +23,7 @@ This document tracks every package planned for or shipped from this monorepo, al
 
 ### `flutter_object_capture`
 
-- **Status:** In progress
+- **Status:** Planned
 - **Apple framework:** [RealityKit Object Capture](https://developer.apple.com/documentation/realitykit/photogrammetrysession) (`PhotogrammetrySession`)
 - **Platforms:** iOS 17+ (on-device); macOS 12+ (desktop pipeline)
 - **Scope:** Photogrammetry pipeline. Takes a folder of photos and produces a textured 3D mesh (`USDZ` / `OBJ`).
