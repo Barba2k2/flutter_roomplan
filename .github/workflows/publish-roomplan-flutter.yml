@@ -1,13 +1,40 @@
-# Publishes roomplan_flutter to pub.dev on tag roomplan_flutter-v<version>; workflow_dispatch is a dry run.
+# Master push bumping the version tags roomplan_flutter-v<version> and dispatches this workflow on the tag, which publishes to pub.dev; dispatch on a branch is a dry run.
 name: Publish roomplan_flutter
 on:
   push:
+    branches: [master]
+    paths: [packages/roomplan_flutter/pubspec.yaml]
     tags: ['roomplan_flutter-v[0-9]+.[0-9]+.[0-9]+*']
   workflow_dispatch:
 permissions:
   contents: read
 jobs:
+  tag:
+    if: github.event_name == 'push' && github.ref_type == 'branch'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      actions: write
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+      - name: Tag the version and start the publish run on the tag
+        run: |
+          v=$(sed -n 's/^version: //p' packages/roomplan_flutter/pubspec.yaml | head -n1)
+          [ -n "$v" ] || { echo "no version in pubspec.yaml"; exit 1; }
+          tag="roomplan_flutter-v$v"
+          if git ls-remote --exit-code --tags origin "refs/tags/$tag" >/dev/null; then
+            echo "$tag already exists, nothing to do"
+            exit 0
+          fi
+          git tag "$tag"
+          git push origin "refs/tags/$tag"
+          gh workflow run publish-roomplan-flutter.yml --ref "$tag"
   verify:
+    if: github.event_name != 'push' || github.ref_type == 'tag'
     runs-on: ubuntu-latest
     defaults:
       run:
