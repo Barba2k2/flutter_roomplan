@@ -1,0 +1,39 @@
+# Publishes roomplan_flutter to pub.dev on tag roomplan_flutter-v<version>; workflow_dispatch is a dry run.
+name: Publish roomplan_flutter
+on:
+  push:
+    tags: ['roomplan_flutter-v[0-9]+.[0-9]+.[0-9]+*']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: packages/roomplan_flutter
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
+        with:
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - name: Tag matches pubspec and CHANGELOG
+        if: github.ref_type == 'tag'
+        run: |
+          v="${GITHUB_REF_NAME#roomplan_flutter-v}"
+          grep -Fxq "version: $v" pubspec.yaml || { echo "pubspec.yaml version is not $v"; exit 1; }
+          grep -Fxq "## $v" CHANGELOG.md || { echo "CHANGELOG.md has no '## $v' entry"; exit 1; }
+      - run: flutter analyze
+      - run: flutter test
+  publish:
+    needs: verify
+    permissions:
+      contents: read
+      id-token: write
+    uses: dart-lang/setup-dart/.github/workflows/publish.yml@6afc89df92d6eb3834022f73cd65adc8cdfcb92d # v1.8.1
+    with:
+      environment: pub.dev
+      working-directory: packages/roomplan_flutter
+      test-run: ${{ github.event_name == 'workflow_dispatch' }}
