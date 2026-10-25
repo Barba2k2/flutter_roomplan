@@ -76,18 +76,14 @@ Naming convention: `flutter_<framework>` for new packages (e.g. `flutter_object_
 
 ## Releasing
 
-Each package is versioned independently. Tags follow the pattern `<package_name>-v<version>` (e.g. `roomplan_flutter-v0.3.0`). Publishing to pub.dev runs from GitHub Actions on a tag push; no local login is needed.
+Each package is versioned independently. Tags follow the pattern `<package_name>-v<version>` (e.g. `roomplan_flutter-v0.3.0`), but you never create them: merging publishes. No local login, no manual tag, no approval.
 
-1. Bump `version` in the package's `pubspec.yaml`, add a `## <version>` entry to its `CHANGELOG.md`, and merge to the default branch.
-2. From the updated default branch, tag and push:
+1. In a PR, bump `version` in the package's `pubspec.yaml` and add a `## <version>` entry to its `CHANGELOG.md`.
+2. Squash merge to `master`. The workflow creates the `roomplan_flutter-v<version>` tag, then runs on that tag: it verifies the tag against `pubspec.yaml` and `CHANGELOG.md`, runs analyze and tests, and publishes to pub.dev.
 
-```bash
-git tag roomplan_flutter-v<version> && git push origin roomplan_flutter-v<version>
-```
+Requires "Enable publishing from `workflow_dispatch` events" checked in the pub.dev admin page (the tag job starts the publish run via `workflow_dispatch`, because tags pushed with `GITHUB_TOKEN` do not trigger push workflows).
 
-3. The workflow verifies the tag against `pubspec.yaml` and `CHANGELOG.md`, runs analyze and tests, then waits for approval in the `pub.dev` environment. Approve it in the Actions UI to publish.
-
-To test the pipeline without publishing, run the "Publish roomplan_flutter" workflow manually (`workflow_dispatch`); it only does a dry run. The `publish` job is an own job, not the `dart-lang/setup-dart` reusable workflow: that one only accepts `environment` and `working-directory` (no `test-run`, no `use-flutter`, so passing them caused `startup_failure`) and always publishes, so it cannot dry-run.
+To test the pipeline without publishing, run the "Publish roomplan_flutter" workflow manually on a branch (`workflow_dispatch`); it only does a dry run. The `publish` job is an own job, not the `dart-lang/setup-dart` reusable workflow: that one only accepts `environment` and `working-directory` and always publishes, so it cannot dry-run.
 
 Do not publish manually with `flutter pub publish`; pub.dev versions cannot be republished or deleted.
 
