@@ -1,3 +1,7 @@
+## 0.3.0+2
+
+- **Chore**: First release published through the automated GitHub Actions workflow. No code changes.
+
 ## 0.3.0+1
 
 - **Docs**: Fix the stale installation snippet in the README (was ^0.1.1, now ^0.3.0). No code changes.
