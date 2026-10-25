@@ -34,7 +34,7 @@ Publish a package version to pub.dev by pushing one git tag, from GitHub Actions
 | Build metadata | So version `0.3.0+1` needs tag `<prefix>0.3.0+1`. `+` is legal in a git tag name. The pattern's allowed-character list does not apply to the substituted version. | derived from the two rows above; **tag name `+` handling by `git push` not tested here** |
 | Monorepo | Docs: "If your repository contains multiple packages, give each a separate tag-pattern", e.g. `my_package_name-v{{version}}`. | [dart.dev](https://dart.dev/tools/pub/automated-publishing) |
 | GitHub tag filter | In `on.push.tags`, `*` matches zero or more chars except `/`; `+` means "one or more of the preceding character"; `.` is literal in the cheat sheet examples. pub.dev's own generated example workflow expands `{{version}}` to `[0-9]+.[0-9]+.[0-9]+*` (trailing `*` tolerates `+1` and prerelease suffixes). | [GitHub workflow syntax](https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax), pub.dev source `admin_page.dart` (`_exampleGitHubWorkflow`) |
-| Reusable workflow | `dart-lang/setup-dart/.github/workflows/publish.yml` has inputs `environment`, `working-directory` (default `.`), `use-flutter` (default **true**, installs Flutter via `flutter-actions/setup-flutter`), `test-run` (default false: only validates and builds the archive, does not publish). It runs `dart pub get`, `dart pub publish --dry-run`, builds the archive, then `dart pub publish --from-archive --force` in a job with `id-token: write`. | [source @ v1](https://github.com/dart-lang/setup-dart/blob/v1/.github/workflows/publish.yml) |
+| Reusable workflow (not used) | **Verified 2026-10-24:** `dart-lang/setup-dart/.github/workflows/publish.yml` @ `6afc89df` accepts ONLY the inputs `environment` and `working-directory`. It has no `test-run` and no `use-flutter`; passing `test-run` made the first run end in `startup_failure`. It always runs `dart pub get`, `dart pub publish --dry-run`, `dart pub publish -f`, so a dry run through it is impossible. The own `publish` job in section 5.2 replaced it. | [source @ 6afc89df](https://github.com/dart-lang/setup-dart/blob/6afc89df92d6eb3834022f73cd65adc8cdfcb92d/.github/workflows/publish.yml) |
 | Environment | Optional "Require GitHub Actions environment": publishing only works if the job declares `environment: <name>`; the name is baked into the OIDC token, so editing the workflow cannot bypass it. GitHub environment protection rules (required reviewers) then hold the run until approved. | [dart.dev](https://dart.dev/tools/pub/automated-publishing) |
 | Hardening | Docs: without extra controls "anyone with push access to your repository can publish"; use tag protection rules or deployment environments. | [dart.dev](https://dart.dev/tools/pub/automated-publishing) |
 | Retraction | A version can be retracted within 7 days of publication (restorable within 7 days of retraction). Retraction is not deletion. | [dart.dev publishing](https://dart.dev/tools/pub/publishing) |
@@ -42,7 +42,7 @@ Publish a package version to pub.dev by pushing one git tag, from GitHub Actions
 
 Pinned action versions (latest releases, all older than 2 weeks; today is 2026-10-24; resolved via GitHub API):
 
-- `dart-lang/setup-dart` v1.8.1, published 2026-08-28, commit `6afc89df92d6eb3834022f73cd65adc8cdfcb92d` (the `v1` tag points to the same commit; its `publish.yml` has `use-flutter`).
+- `dart-lang/setup-dart` v1.8.1, published 2026-08-28, commit `6afc89df92d6eb3834022f73cd65adc8cdfcb92d` (the `v1` tag points to the same commit). Its `action.yml` runs `createPubOIDCToken` in `lib/main.dart`: when `ACTIONS_ID_TOKEN_REQUEST_URL` is set (job has `id-token: write`) it exports `PUB_TOKEN` and runs `dart pub token add https://pub.dev --env-var PUB_TOKEN` (verified in source).
 - `actions/checkout` v7.0.1, published 2026-07-20, commit `3d3c42e5aac5ba805825da76410c181273ba90b1`.
 - `subosito/flutter-action` v2.23.0, published 2026-03-25, commit `1a449444c387b1966244ae4d4f8c696479add0b2`.
 
@@ -69,7 +69,7 @@ Jobs:
    - `CHANGELOG.md` has a `## <version>` heading;
    - `flutter analyze`;
    - `flutter test` in `packages/roomplan_flutter`.
-2. `publish`: `needs: verify`, calls the dart-lang reusable workflow pinned to the SHA above with `environment: pub.dev`, `working-directory: packages/roomplan_flutter`, `test-run: ${{ github.event_name == 'workflow_dispatch' }}`, and `permissions: id-token: write`. The reusable workflow already does `pub get` and `pub publish --dry-run` (so the dry-run gate is covered; do not duplicate it).
+2. `publish`: own job (the dart-lang reusable workflow was dropped, see section 3: it has no `test-run`/`use-flutter` inputs, so it caused `startup_failure`, and it cannot dry-run). `needs: verify`, `permissions: contents: read, id-token: write`, `environment` only on tag runs (`github.ref_type == 'tag' && 'pub.dev' || null`, so `workflow_dispatch` dry runs need no approval). Steps: checkout, `dart-lang/setup-dart` (provisions the OIDC token), `subosito/flutter-action`, `flutter pub get`, `flutter pub publish --dry-run`, then on tags only `flutter pub publish --force`.
 
 Draft (to be validated, not yet run):
 
@@ -104,16 +104,29 @@ jobs:
   publish:
     needs: verify
     permissions:
+      contents: read
       id-token: write
-    uses: dart-lang/setup-dart/.github/workflows/publish.yml@6afc89df92d6eb3834022f73cd65adc8cdfcb92d # v1.8.1
-    with:
-      environment: pub.dev
-      working-directory: packages/roomplan_flutter
-      test-run: ${{ github.event_name == 'workflow_dispatch' }}
+    runs-on: ubuntu-latest
+    environment: ${{ github.ref_type == 'tag' && 'pub.dev' || null }}
+    defaults:
+      run:
+        working-directory: packages/roomplan_flutter
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: dart-lang/setup-dart@6afc89df92d6eb3834022f73cd65adc8cdfcb92d # v1.8.1
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
+        with:
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - run: flutter pub publish --dry-run
+      - name: Publish
+        if: github.ref_type == 'tag'
+        run: flutter pub publish --force
 ```
 
 **UNVERIFIED, must be proven in rollout R1:**
-- The reusable workflow works for this Flutter plugin inside a pub workspace (`resolution: workspace`, Flutter SDK dependency). The source shows `use-flutter` defaults to true and runs `dart pub get`, but a plugin in a workspace member was not tested. Fallback if it fails: replace the `publish` job with an own job (checkout, `subosito/flutter-action`, `flutter pub publish --force`, `permissions: id-token: write`, `environment: pub.dev`). The docs' manual example uses `dart-lang/setup-dart` + `dart pub publish --force` for pure Dart packages; whether `flutter pub publish` picks up the OIDC token the same way is not covered by the docs I read (**UNVERIFIED**).
+- `flutter pub publish` picks up the setup-dart OIDC token: setup-dart stores it with `dart pub token add` (user-level pub config, not `PUB_CACHE`) and exports `PUB_TOKEN`; the reusable workflow's own comment says Flutter's `dart` shadows the setup-dart one, yet it publishes with it. Source-verified, but only proven end to end in R1/R3 (**UNVERIFIED** at runtime). A plugin inside a pub workspace member (`resolution: workspace`) was not tested either.
 - `flutter test` passes headless on Linux (looks pure Dart: `mapper_test`, `models_test`, `floor_ceiling_test`; not run here).
 - `flutter analyze` at the workspace root is clean today (not run here).
 - Whether the caller job needs `contents: read` for a private repo (repo is public; irrelevant today).
@@ -128,7 +141,7 @@ Page: `pub.dev/packages/roomplan_flutter/admin`, section Automated publishing > 
 | Repository | `Barba2k2/flutter_roomplan` | exact `<owner>/<repository>`; pub.dev rejects other repos |
 | Tag pattern | `roomplan_flutter-v{{version}}` | see 5.1 |
 | Enable publishing from `push` events | **checked** | the only trigger the flow uses |
-| Enable publishing from `workflow_dispatch` events | **unchecked** | it still requires a tag ref (source above), so it adds no capability; the dry run in the workflow does not need pub.dev to allow it (test-run never contacts pub.dev for publishing). Fewer ways to publish = smaller attack surface |
+| Enable publishing from `workflow_dispatch` events | **unchecked** | it still requires a tag ref (source above), so it adds no capability; the dry run in the workflow does not need pub.dev to allow it (`pub publish --dry-run` never publishes). Fewer ways to publish = smaller attack surface |
 | Require GitHub Actions environment | **checked**, name `pub.dev` | gives a manual approval gate and a token-bound control that a workflow edit cannot bypass |
 | Enable manual publishing (separate section) | **unchecked, but only after the first successful automated release** | pub.dev recommends disabling it; keep it on until R3 proves the pipeline, otherwise a broken CI locks out releases |
 
@@ -149,7 +162,7 @@ The rest of the loop (delete nothing, branch kept after merge) follows the owner
 - Who can publish = who can push a matching tag AND approve the `pub.dev` environment. Configure:
   - GitHub environment `pub.dev` with required reviewer = owner. Recommendation for a solo owner: keep "prevent self-review" off, otherwise nobody can approve (**UNVERIFIED** GitHub setting name/default; check in the UI).
   - Restrict tag creation for `roomplan_flutter-v*` to admins. GitHub's older "tag protection rules" may be superseded by repository rulesets (**UNVERIFIED**, not checked); use whichever the repo settings offer. dart.dev names tag protection and environments as the two hardening options.
-- Reusable workflow and actions pinned by commit SHA, so a moved tag upstream cannot change what runs. Dependabot for `github-actions` can bump them (optional, not part of this PRD).
+- Actions pinned by commit SHA, so a moved tag upstream cannot change what runs. Dependabot for `github-actions` can bump them (optional, not part of this PRD).
 - `verify` job has `contents: read` only; only `publish` has `id-token: write`.
 - Fork PRs cannot publish: pub.dev only accepts tag-triggered tokens for the configured repository.
 
@@ -169,7 +182,7 @@ The rest of the loop (delete nothing, branch kept after merge) follows the owner
 | Gate fails (analyze/test/CHANGELOG) | nothing published | fix via PR, move tag to the new commit: delete remote tag, retag, push |
 | Approval rejected or never given | nothing published | re-run or retag |
 | OIDC/permission error from pub.dev | run fails at publish, nothing published | read log; confirm repo, pattern, environment name, push-events checkbox |
-| Reusable workflow cannot handle Flutter plugin/workspace | `validate` fails | switch to the own-job fallback in 5.2 |
+| Own `publish` job fails on the Flutter plugin/workspace or the OIDC token | `publish` fails at dry run or publish | read log; confirm `id-token: write`, setup-dart before flutter-action, pub.dev admin settings |
 | Bad version already published | cannot be republished or deleted | publish a fixed version (`+1` or patch); retract the bad one within 7 days (restorable within 7 days) |
 | Automation broken and urgent release needed | n/a | manual publishing still enabled until R3; afterwards re-enable the checkbox on the admin page |
 
@@ -178,7 +191,7 @@ Rule: if `verify` is green, the failure is almost always in pub.dev settings, no
 ## 11. Rollout plan
 
 - **R0 (settings, no code):** create GitHub environment `pub.dev` with owner as required reviewer; apply the tag-creation restriction; set pub.dev admin fields per section 6 except leave manual publishing on.
-- **R1 (dry run, no publish):** merge the workflow file; run it via `workflow_dispatch` (so `test-run: true`). Must show: `verify` green, `validate` green, archive built and verified, approval prompt appears. Fix the UNVERIFIED items in 5.2 here; switch to the fallback job if needed.
+- **R1 (dry run, no publish):** merge the workflow file; run it via `workflow_dispatch` (no tag, so no environment approval and no publish). Must show: `verify` green, `publish` green through `flutter pub publish --dry-run`. Fix the UNVERIFIED items in 5.2 here.
 - **R2 (guarded negative test):** push a deliberately wrong tag on a throwaway commit (for example `roomplan_flutter-v9.9.9` where pubspec says otherwise) and confirm `verify` fails before the approval step, nothing published. Delete the tag afterwards. Only do this with the environment gate active, so a mistake cannot publish.
 - **R3 (real release):** next real version goes through the flow in section 7. Verify the pub.dev audit log entry and package page. Then uncheck "Enable manual publishing".
 - **R4:** document the release steps in `CONTRIBUTING.md` (3 lines) and copy the workflow for the next package when it exists (after its manual first publish).
