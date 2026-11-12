@@ -3,7 +3,7 @@ import 'package:example/widgets/openings_details_view.dart';
 import 'package:example/widgets/paint_area_details_view.dart';
 import 'package:example/widgets/room_details_view.dart';
 import 'package:example/widgets/walls_details_view.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:provider/provider.dart'; // Import provider
 import 'package:example/viewmodels/results_view_model.dart'; // Import ResultsViewModel
 

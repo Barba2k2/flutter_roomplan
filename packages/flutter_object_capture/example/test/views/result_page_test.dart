@@ -1,9 +1,9 @@
-import 'package:flutter/material.dart';
 import 'package:flutter_object_capture_example/controllers/result_controller.dart';
 import 'package:flutter_object_capture_example/models/result_info.dart';
 import 'package:flutter_object_capture_example/strings/app_strings.dart';
 import 'package:flutter_object_capture_example/views/result_page.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:material_ui/material_ui.dart';
 
 void main() {
   const info = ResultInfo(path: '/nope/model.usdz', fileSizeBytes: 5242880);

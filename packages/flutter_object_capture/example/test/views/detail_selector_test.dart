@@ -1,9 +1,9 @@
-import 'package:flutter/material.dart';
 import 'package:flutter_object_capture/flutter_object_capture.dart';
 import 'package:flutter_object_capture_example/controllers/reconstruct_controller.dart';
 import 'package:flutter_object_capture_example/strings/app_strings.dart';
 import 'package:flutter_object_capture_example/views/reconstruct_page.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:material_ui/material_ui.dart';
 
 import '../support/fake_native.dart';
 

@@ -1,5 +1,5 @@
 import 'package:example/widgets/advanced_scanning/statistic_item.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:roomplan_flutter/roomplan_flutter.dart';
 
 class StatisticsCard extends StatelessWidget {

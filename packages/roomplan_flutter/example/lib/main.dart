@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:example/views/home_page.dart';
 import 'advanced_scanning_page.dart';
 import 'package:provider/provider.dart';

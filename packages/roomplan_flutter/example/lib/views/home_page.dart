@@ -1,5 +1,5 @@
 import 'package:example/views/scanner_page.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:provider/provider.dart'; // Import provider
 import 'package:example/viewmodels/home_view_model.dart'; // Import HomeViewModel
 

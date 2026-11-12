@@ -5,7 +5,7 @@ import 'package:example/widgets/advanced_scanning/status_card.dart';
 import 'package:example/widgets/advanced_scanning/statistics_card.dart';
 import 'package:example/widgets/advanced_scanning/unsupported_card.dart';
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:roomplan_flutter/roomplan_flutter.dart';
 
 /// Advanced scanning page demonstrating live statistics and unit switching.
