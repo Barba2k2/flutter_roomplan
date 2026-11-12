@@ -7,3 +7,4 @@
 - macOS 12+ support: plugin sources moved from `ios/` to a shared `darwin/` folder (`sharedDarwinSource`, podspec and Swift Package for both platforms), platform code guarded with `#if os(iOS)` / `#if os(macOS)`. Guided capture reports unsupported on macOS.
 - `ObjectDetail` (`preview`, `reduced`, `medium`, `full`, `raw`) and `ObjectOutputFormat` (`usdz`, `objDirectory`) added to `ObjectCaptureConfiguration` (defaults `reduced` / `usdz`, non-breaking). iOS rejects any other detail with the new `UnsupportedDetailException` (`unsupported_detail`) and `objDirectory` with `InvalidOutputPathException`; macOS accepts all. `InvalidOutputPathException` now takes the output format. Poses and custom detail are not wired.
 - Example app: macOS runner, detail selector on macOS, Capture photos button hidden when guided capture is unsupported.
+- Minimum raised to Flutter 3.50.0 / Dart 3.13.7; all dependencies updated to latest; example app and tests moved to `package:material_ui`.

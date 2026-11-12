@@ -33,7 +33,7 @@ The architecture and the umbrella package model are documented in [`docs/ARCHITE
 
 ### Prerequisites
 
-- Flutter `>=3.10.0` (Dart `>=3.0.0`)
+- Flutter `>=3.50.0` (Dart `>=3.13.7`)
 - Xcode 15+ (for iOS plugins)
 - A device with LiDAR for any plugin that requires it (RoomPlan, Object Capture)
 
