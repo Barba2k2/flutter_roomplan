@@ -8,9 +8,7 @@ class ObjectPool<T> {
   final void Function(T)? _reset;
   final int _maxSize;
 
-  ObjectPool(this._factory, {void Function(T)? reset, int maxSize = 10})
-      : _reset = reset,
-        _maxSize = maxSize;
+  ObjectPool(this._factory, {this._reset, this._maxSize = 10});
 
   T acquire() {
     if (_pool.isNotEmpty) {

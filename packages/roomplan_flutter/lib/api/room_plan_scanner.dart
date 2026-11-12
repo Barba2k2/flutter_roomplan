@@ -1,5 +1,5 @@
 import 'dart:async';
-import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:roomplan_flutter/roomplan_flutter.dart';
 import 'package:roomplan_flutter/src/performance/optimized_mapper.dart';
 import 'package:roomplan_flutter/src/services/room_plan_channel.dart';

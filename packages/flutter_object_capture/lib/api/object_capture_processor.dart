@@ -49,8 +49,7 @@ class ObjectCaptureProcessor {
     }
     return _channel.captureImages(<String, Object?>{
       'imagesDirectory': imagesDirectory,
-      if (checkpointDirectory != null)
-        'checkpointDirectory': checkpointDirectory,
+      'checkpointDirectory': ?checkpointDirectory,
       'isOverCaptureEnabled': isOverCaptureEnabled,
       'areaMode': areaMode,
     });
