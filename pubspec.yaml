@@ -8,6 +8,8 @@ environment:
 workspace:
   - packages/roomplan_flutter
   - packages/roomplan_flutter/example
+  - packages/flutter_object_capture
+  - packages/flutter_object_capture/example
 
 dev_dependencies:
   melos: ^8.9.0

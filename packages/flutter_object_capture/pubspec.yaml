@@ -1,0 +1,41 @@
+name: flutter_object_capture
+description: A Flutter plugin for iOS and macOS that wraps Apple's RealityKit Object Capture (PhotogrammetrySession) to turn a folder of photos into a textured 3D model.
+version: 0.0.1
+homepage: https://github.com/Barba2k2/flutter_roomplan
+repository: https://github.com/Barba2k2/flutter_roomplan
+issue_tracker: https://github.com/Barba2k2/flutter_roomplan/issues
+
+topics:
+  - object-capture
+  - photogrammetry
+  - realitykit
+  - model-3d
+
+platforms:
+  ios:
+  macos:
+
+environment:
+  sdk: ^3.6.0
+  flutter: ">=3.10.0"
+
+resolution: workspace
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+dev_dependencies:
+  flutter_lints: ^6.0.0
+  flutter_test:
+    sdk: flutter
+
+flutter:
+  plugin:
+    platforms:
+      ios:
+        pluginClass: SwiftFlutterObjectCapturePlugin
+        sharedDarwinSource: true
+      macos:
+        pluginClass: SwiftFlutterObjectCapturePlugin
+        sharedDarwinSource: true
