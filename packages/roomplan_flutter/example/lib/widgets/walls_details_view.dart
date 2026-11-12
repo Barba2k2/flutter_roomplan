@@ -1,7 +1,7 @@
 import 'package:example/utils/colors.dart';
 import 'package:example/widgets/detail_row.dart';
 import 'package:example/widgets/measurement_card.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:roomplan_flutter/roomplan_flutter.dart';
 
 class WallsDetailsView extends StatelessWidget {

@@ -3,7 +3,7 @@ description: Monorepo workspace for Flutter plugins wrapping Apple camera, visio
 publish_to: none
 
 environment:
-  sdk: ^3.6.0
+  sdk: ^3.13.7
 
 workspace:
   - packages/roomplan_flutter

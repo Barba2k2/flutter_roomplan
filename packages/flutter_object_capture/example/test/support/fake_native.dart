@@ -72,14 +72,14 @@ class FakeNative {
   void progress(double fraction, {int? seconds}) => sink?.success({
         'type': 'progress',
         'fraction': fraction,
-        if (seconds != null) 'estimatedRemainingSeconds': seconds,
+        'estimatedRemainingSeconds': ?seconds,
       });
 
   void sampleIssue(int id, {String? reason, bool skipped = false}) =>
       sink?.success({
         'type': 'sampleIssue',
         'sampleId': id,
-        if (reason != null) 'reason': reason,
+        'reason': ?reason,
         'skipped': skipped,
       });
 

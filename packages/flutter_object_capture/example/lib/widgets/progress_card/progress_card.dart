@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import '../../helpers/remaining_time_helper.dart';
 import '../../strings/app_strings.dart';
 

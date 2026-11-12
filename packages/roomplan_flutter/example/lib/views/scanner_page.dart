@@ -3,7 +3,7 @@ import 'package:example/viewmodels/scanner_view_model.dart';
 import 'package:example/widgets/scanner/instructions_card.dart';
 import 'package:example/widgets/scanner/scan_data_card.dart';
 import 'package:example/widgets/scanner/scanner_card.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:provider/provider.dart';
 
 /// A comprehensive example demonstrating how to use the RoomPlanScanner.

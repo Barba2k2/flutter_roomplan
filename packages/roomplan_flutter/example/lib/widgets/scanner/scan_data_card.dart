@@ -1,5 +1,5 @@
 import 'package:example/widgets/scanner/scanner_data_row.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:roomplan_flutter/roomplan_flutter.dart';
 
 /// The real-time scan data display card.

@@ -1,5 +1,5 @@
-import 'package:flutter/material.dart';
 import 'package:flutter_object_capture/flutter_object_capture.dart';
+import 'package:material_ui/material_ui.dart';
 import '../../strings/app_strings.dart';
 
 class LimitsCard extends StatelessWidget {

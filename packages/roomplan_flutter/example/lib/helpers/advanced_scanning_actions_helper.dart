@@ -1,7 +1,7 @@
 import 'package:example/helpers/top_banner_helper.dart';
 import 'package:example/viewmodels/advanced_scanning_view_model.dart';
 import 'package:example/widgets/advanced_scanning/scan_results_dialog.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:roomplan_flutter/roomplan_flutter.dart';
 
 class AdvancedScanningActionsHelper {

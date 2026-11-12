@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// Banner that slides in from the top, stays visible, then slides out.
 class TopBanner extends StatefulWidget {

@@ -1,3 +1,7 @@
+## 0.3.0+4
+
+- **Chore**: Minimum raised to Flutter 3.50.0 / Dart 3.13.7; all dependencies updated to latest; example apps and tests moved to `package:material_ui`. No API changes.
+
 ## 0.3.0+3
 
 - **Chore**: Releases are now tagged and published automatically when the version changes on master. No code changes.

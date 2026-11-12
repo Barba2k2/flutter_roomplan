@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import '../../strings/app_strings.dart';
 
 class UnsupportedCard extends StatelessWidget {

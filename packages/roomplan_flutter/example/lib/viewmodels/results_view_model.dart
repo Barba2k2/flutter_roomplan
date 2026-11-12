@@ -1,10 +1,10 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:roomplan_flutter/roomplan_flutter.dart';
 
 class ResultsViewModel extends ChangeNotifier {
   final ScanResult _scanResult;
 
-  ResultsViewModel({required ScanResult scanResult}) : _scanResult = scanResult;
+  ResultsViewModel({required this._scanResult});
 
   ScanResult get scanResult => _scanResult;
 
